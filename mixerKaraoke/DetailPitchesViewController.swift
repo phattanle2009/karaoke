@@ -48,10 +48,10 @@ class DetailPitchesViewController: UIViewController {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             guard let player = self.audioPlayer else { return }
             let currentTime = player.currentTime
-            print("===========> currentTime: \(currentTime)")
             for (lineIdx, line) in self.song.lines.enumerated() {
                 for (syllablesIdx, syllables) in line.syllables.enumerated() {
                     if lineIdx == self.currentLine {
+                        // cập nhật lại line mới, remove cái line cũ đi
                         if currentTime > line.syllables.last!.startTime {
                             self.currentLine += 1
                             self.drawDone = false
@@ -62,25 +62,30 @@ class DetailPitchesViewController: UIViewController {
                             break
                         }
                         
-                        if self.drawDone {
-                            break
+                        // tô màu cho cái chữ đang hát
+                        if currentTime >= syllables.startTime {
+                            self.karaokeTextContainer.arrangedSubviews.forEach { subview in
+                                if let label = subview as? UILabel, subview.tag == syllablesIdx {
+                                    label.textColor = .systemBlue
+                                }
+                            }
                         }
                         
+                        // kh done thì cứ thế mà vẽ chữ
+                        if !self.drawDone {
+                            let label = UILabel()
+                            label.tag = syllablesIdx
+                            label.textColor = .black
+                            label.text = syllables.word
+                            label.font = .boldSystemFont(ofSize: 32.0)
+                            label.translatesAutoresizingMaskIntoConstraints = false
+                            self.karaokeTextContainer.addArrangedSubview(label)
+                        }
+                        
+                        // vẽ xong thì kh cho nó vẽ nữa, kh cho vào stack nữa
                         if syllablesIdx == line.syllables.count - 1 {
                             self.drawDone = true
                         }
-                        
-                        let label = UILabel()
-                        label.text = syllables.word
-                        label.font = .boldSystemFont(ofSize: 24.0)
-                        label.textColor = currentTime > syllables.startTime ? .systemBlue : .black
-                        label.translatesAutoresizingMaskIntoConstraints = false
-                        label.tag = 0
-                        self.karaokeTextContainer.addArrangedSubview(label)
-                        
-                        print("===========> lineIdx: \(lineIdx)")
-                        print("===========> syllablesIdx: \(syllablesIdx)")
-                        print("===========> syllables.word: \(syllables.word)")
                     }
                 }
             }

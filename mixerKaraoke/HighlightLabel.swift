@@ -7,7 +7,7 @@
 
 import UIKit
 
-class HighlighLabel: UILabel {
+class HighlightLabel: UILabel {
     
     init(title: String, isHighlight: Bool) {
         super.init(frame: .zero)
@@ -20,8 +20,12 @@ class HighlighLabel: UILabel {
     
     private func initView(title: String, isHighlight: Bool) {
         // init titleLabel
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.textColor = isHighlight ? .systemRed : .black
+//        let titleLabel = UILabel()
+        text = title
+        textColor = isHighlight ? .systemBlue : .black
+    }
+    
+    func configLabel(isHighlight: Bool) {
+        textColor = isHighlight ? .systemBlue : .black
     }
 }
