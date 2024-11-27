@@ -9,32 +9,31 @@ import UIKit
 import Foundation
 import AVFoundation
 
-struct UltraStarWord: Codable {
-    let startTime: Double
-    let duration: Double
-    let pitch: Int
-    let word: String
-}
-
 class DetailPitchesViewController: UIViewController {
     
-    @IBOutlet weak var lyricsLabel: UILabel!
+    @IBOutlet weak var karaokeTextContainer: UIStackView!
     @IBOutlet weak var pauseButton: UIButton!
     
-    var lyricsData: [UltraStarWord] = []
+    var song = UltraStarSong(lines: [])
     var audioPlayer: AVAudioPlayer?
-    var currentWordIndex = 0
+    var currentLine = 0
+    var drawDone = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         if let filePath = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "txt"),
-            let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
-            lyricsData = parseUltraStarFile(lrcString, bpm: 303.48, gap: 5823.23 / 1000)
+           let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
+            song = parseUltraStarFile(lrcString)
             loadAudio()
             startLyricsSync()
             // drawPitchGraph(wordPitches: lyricsData)
         }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        audioPlayer?.pause()
     }
     
     func loadAudio() {
@@ -49,105 +48,117 @@ class DetailPitchesViewController: UIViewController {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             guard let player = self.audioPlayer else { return }
             let currentTime = player.currentTime
-            
-            if self.currentWordIndex < self.lyricsData.count {
-                let word = self.lyricsData[self.currentWordIndex]
-                if currentTime >= word.startTime {
-                    self.lyricsLabel.text = word.word
-                    self.currentWordIndex += 1
+            print("===========> currentTime: \(currentTime)")
+            for (lineIdx, line) in self.song.lines.enumerated() {
+                for (syllablesIdx, syllables) in line.syllables.enumerated() {
+                    if lineIdx == self.currentLine {
+                        if currentTime > line.syllables.last!.startTime {
+                            self.currentLine += 1
+                            self.drawDone = false
+                            self.karaokeTextContainer.arrangedSubviews.forEach { subview in
+                                self.karaokeTextContainer.removeArrangedSubview(subview)
+                                subview.removeFromSuperview()
+                            }
+                            break
+                        }
+                        
+                        if self.drawDone {
+                            break
+                        }
+                        
+                        if syllablesIdx == line.syllables.count - 1 {
+                            self.drawDone = true
+                        }
+                        
+                        let label = UILabel()
+                        label.text = syllables.word
+                        label.font = .boldSystemFont(ofSize: 24.0)
+                        label.textColor = currentTime > syllables.startTime ? .systemBlue : .black
+                        label.translatesAutoresizingMaskIntoConstraints = false
+                        label.tag = 0
+                        self.karaokeTextContainer.addArrangedSubview(label)
+                        
+                        print("===========> lineIdx: \(lineIdx)")
+                        print("===========> syllablesIdx: \(syllablesIdx)")
+                        print("===========> syllables.word: \(syllables.word)")
+                    }
                 }
             }
         }
     }
-    
     
     func beatToSeconds(beat: Double, bpm: Double) -> Double {
-        return (beat / (bpm * 4)) * 60
+        return (beat / bpm) * 60
     }
     
-    func parseUltraStarFile(_ content: String, bpm: Double, gap: Double) -> [UltraStarWord] {
-        var lyricsData: [UltraStarWord] = []
+    func parseUltraStarFile(_ content: String) -> UltraStarSong {
         let lines = content.components(separatedBy: "\n")
+        var song = UltraStarSong(lines: [])
+        var lastLine = UltraStarLine(syllables: [])
         
         for line in lines {
-            if line.starts(with: ":") {
-                let components = line.split(separator: " ")
-                if components.count >= 5 {
-                    let startTime = Double(components[1]) ?? 0.0
-                    let duration = Double(components[2]) ?? 0.0
-                    let pitch = Int(components[3]) ?? 0
-                    let word = components[4...].joined(separator: " ")
-                    let startInSeconds = beatToSeconds(beat: startTime, bpm: bpm) + gap
-                    let lyricLine = UltraStarWord(startTime: startInSeconds,
-                                                  duration: duration,
-                                                  pitch: pitch,
-                                                  word: word)
-                    lyricsData.append(lyricLine)
+            if(line.starts(with: "#")) {
+                if (line.starts(with: "#TITLE")) {
+                    let components = line.split(separator: "#TITLE:")
+                    song.title = String(components[0]).replacingOccurrences(of: "\r", with: "")
+                } else if (line.starts(with: "#ARTIST")) {
+                    let components = line.split(separator: "#ARTIST:")
+                    song.artist = String(components[0]).replacingOccurrences(of: "\r", with: "")
+                } else if (line.starts(with: "#BPM")) {
+                    var components = "\(line.split(separator: "#BPM:")[0])".replacingOccurrences(of: "\r", with: "")
+                    components = components.replacingOccurrences(of: ",", with: ".")
+                    song.BPM = (Double(components) ?? 0.0) * 4
+                } else if (line.starts(with: "#GAP")) {
+                    var components = "\(line.split(separator: "#GAP:")[0])".replacingOccurrences(of: "\r", with: "")
+                    components = components.replacingOccurrences(of: ",", with: ".")
+                    song.GAP = (Double(components) ?? 0.0) / 1000.0
+                }
+            }
+            else {
+                if (line.starts(with: ":") || line.starts(with: "*") || line.starts(with: "F")) {
+                    let components = getLineComponents(data: line)
+                    if components.count >= 5 {
+                        let startTime = Double(components[1]) ?? 0.0
+                        let duration = Double(components[2]) ?? 0.0
+                        let pitch = Int(components[3]) ?? 0
+                        let word = "\(components[4...].joined(separator: " "))".replacingOccurrences(of: "\r", with: "")
+                        let startInSeconds = beatToSeconds(beat: startTime, bpm: song.BPM) + song.GAP
+                        let lyricWord = UltraStarWord(startTime: startInSeconds,
+                                                      duration: duration,
+                                                      pitch: pitch,
+                                                      word: word)
+                        lastLine.syllables.append(lyricWord)
+                    }
+                } else if (line.starts(with: "-")) {
+                    let components = "\(line.split(separator: "-")[0])".replacingOccurrences(of: "\r", with: "")
+                    lastLine.from = Double(components) ?? 0.0
+                    song.lines.append(lastLine)
+                    let a = lastLine.syllables.map { $0.word }.joined()
+                    print(a)
+                    lastLine.syllables.removeAll()
                 }
             }
         }
-        return lyricsData
+        return song
     }
     
-    /*
-     public static Song parse(List<String> data) throws Exception {
-             Song song = new Song();
-             Song.Line lastLine = null;
-             for (String line : data) {
-                 // tags
-     if(line.starts(with: "#")) {
-         if (line.starts(with: "#TITLE")) {
-             song.title = getStringValue(line, "#TITLE");
-         } else if (line.starts(with: "#ARTIST")) {
-             song.artist = getStringValue(line, "#ARTIST");
-         } else if (line.starts(with: "#EDITION")) {
-             //
-         } else if (line.starts(with: "#LANGUAGE")) {
-             //
-         } else if (line.starts(with: "#GENRE")) {
-             //
-         } else if (line.starts(with: "#MP3")) {
-             song.file = getStringValue(line, "#MP3");
-         } else if (line.starts(with: "#COVER")) {
-            song.cover = getStringValue(line, "#COVER");
-         } else if (line.starts(with: "#BPM")) {
-             song.BPM = getFloatValue(line, "#BPM") * 4;
-         } else if (line.starts(with: "#GAP")) {
-             song.gap = getFloatValue(line, "#GAP") / 1000.0;
-         }
-     }
-     else {
-         // lyrics
-         if (line.starts(with: ":") || line.starts(with: "*") || line.starts(with: "F")) {
-             Song.Syllable syllable = parseSyllable(song, line);
-             if(null == lastLine) {
-                 lastLine = new Song.Line();
-                 song.lines.add(lastLine);
-             }
-             lastLine.syllables.add(syllable);
-         } else if (line.starts(with: "-")) {
-             int[] timestamps = parseInts(line);
-             if(timestamps.length < 1)
-                 throw new Exception("Bad line delimiter: " + line);
-             if(null == lastLine)
-                 continue;
-             lastLine.to = getTimestamp(song, timestamps[0]);
-             lastLine = new Song.Line();
-             song.lines.add(lastLine);
-             if(timestamps.length > 1)
-                 lastLine.from = getTimestamp(song, timestamps[1]);
-         }
-     }
-             }
-
-             // fix starts
-             for(Song.Line line : song.lines)
-                 if(line.from == 0 && line.syllables.size() > 0)
-                     line.from = line.syllables.get(0).from;
-
-             return song;
-         }
-     */
+    func getLineComponents(data: String) -> [String] {
+        var result: [String] = []
+        var tmp = ""
+        let spaceCount = data.filter{$0 == " "}.count
+        let component = data.split(separator: " ")
+        if component.count >= 5 {
+            for idx in 0..<component.count  {
+                if idx == component.count - 1 && spaceCount > 4 {
+                    tmp = " \(component[idx])"
+                } else {
+                    tmp = "\(component[idx])"
+                }
+                result.append(tmp)
+            }
+        }
+        return result
+    }
     
     func drawPitchGraph(wordPitches: [UltraStarWord]) {
         for (index, word) in wordPitches.enumerated() {
