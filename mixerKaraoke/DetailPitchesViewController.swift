@@ -11,7 +11,7 @@ import AVFoundation
 
 class DetailPitchesViewController: UIViewController {
     
-    @IBOutlet weak var pitchGraphView: PitchGraphView!
+    @IBOutlet weak var pitchGraphView: UIStackView!
     @IBOutlet weak var karaokeTextContainer: UIStackView!
     @IBOutlet weak var pauseButton: UIButton!
     
@@ -70,6 +70,11 @@ class DetailPitchesViewController: UIViewController {
                                     label.textColor = .systemBlue
                                 }
                             }
+                            self.pitchGraphView.arrangedSubviews.forEach { subview in
+                                if subview.tag == syllablesIdx {
+                                    subview.subviews.first?.backgroundColor = .systemBlue
+                                }
+                            }
                         }
                         
                         // kh done thì cứ thế mà vẽ chữ
@@ -86,6 +91,9 @@ class DetailPitchesViewController: UIViewController {
                         // vẽ xong thì kh cho nó vẽ nữa, kh cho vào stack nữa
                         if syllablesIdx == line.syllables.count - 1 {
                             self.drawDone = true
+                        }
+                        
+                        if self.pitchGraphView.arrangedSubviews.isEmpty {
                             self.drawPitchGraph(wordPitches: line.syllables)
                         }
                     }
@@ -168,13 +176,58 @@ class DetailPitchesViewController: UIViewController {
     }
     
     func drawPitchGraph(wordPitches: [UltraStarWord]) {
-        pitchGraphView.pitchData = wordPitches
-        pitchGraphView.setNeedsDisplay()
+        let barHeight: CGFloat = 28
+        let barWidth: CGFloat = 10
+        
+        for (index, pitch) in wordPitches.enumerated() {
+            let width = barWidth * pitch.duration
+            let pitchY = CGFloat(pitch.pitch * 6) + 50 // 50 is padding
+            
+            let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 120.0))
+            container.translatesAutoresizingMaskIntoConstraints = false
+            container.tag = index
+            pitchGraphView.addArrangedSubview(container)
+            
+            let pitchView = UIView()
+            pitchView.translatesAutoresizingMaskIntoConstraints = false
+            pitchView.layer.cornerRadius = 5
+            pitchView.backgroundColor = .systemYellow
+            
+            container.addSubview(pitchView)
+            
+            NSLayoutConstraint.activate([
+                pitchView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 0),
+                pitchView.topAnchor.constraint(equalTo: container.topAnchor, constant: pitchY),
+                pitchView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
+                pitchView.heightAnchor.constraint(equalToConstant: barHeight),
+            ])
+            
+            let label = UILabel()
+            label.text = pitch.word
+            label.lineBreakMode = .byCharWrapping
+            label.textAlignment = .center
+            label.font = .systemFont(ofSize: 14.0)
+            label.textColor = .white
+            label.numberOfLines = 0
+            label.translatesAutoresizingMaskIntoConstraints = false
+            
+            pitchView.addSubview(label)
+            
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(equalTo: pitchView.leadingAnchor, constant: 0),
+                label.topAnchor.constraint(equalTo: pitchView.topAnchor, constant: 0),
+                label.trailingAnchor.constraint(equalTo: pitchView.trailingAnchor, constant: 0),
+                label.bottomAnchor.constraint(equalTo: pitchView.bottomAnchor, constant: 0),
+                label.widthAnchor.constraint(equalToConstant: width),
+            ])
+        }
     }
     
     private func removePitchGraph() {
-        pitchGraphView.pitchData = []
-        pitchGraphView.setNeedsDisplay()
+        pitchGraphView.arrangedSubviews.forEach { subview in
+            pitchGraphView.removeArrangedSubview(subview)
+            subview.removeFromSuperview()
+        }
     }
     
     @IBAction func tapOnPauseButton(_ sender: Any) {
