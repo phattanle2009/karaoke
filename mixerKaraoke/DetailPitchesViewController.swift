@@ -11,6 +11,7 @@ import AVFoundation
 
 class DetailPitchesViewController: UIViewController {
     
+    @IBOutlet weak var pitchGraphView: PitchGraphView!
     @IBOutlet weak var karaokeTextContainer: UIStackView!
     @IBOutlet weak var pauseButton: UIButton!
     
@@ -27,7 +28,6 @@ class DetailPitchesViewController: UIViewController {
             song = parseUltraStarFile(lrcString)
             loadAudio()
             startLyricsSync()
-            // drawPitchGraph(wordPitches: lyricsData)
         }
     }
     
@@ -59,6 +59,7 @@ class DetailPitchesViewController: UIViewController {
                                 self.karaokeTextContainer.removeArrangedSubview(subview)
                                 subview.removeFromSuperview()
                             }
+                            self.removePitchGraph()
                             break
                         }
                         
@@ -85,6 +86,7 @@ class DetailPitchesViewController: UIViewController {
                         // vẽ xong thì kh cho nó vẽ nữa, kh cho vào stack nữa
                         if syllablesIdx == line.syllables.count - 1 {
                             self.drawDone = true
+                            self.drawPitchGraph(wordPitches: line.syllables)
                         }
                     }
                 }
@@ -166,14 +168,13 @@ class DetailPitchesViewController: UIViewController {
     }
     
     func drawPitchGraph(wordPitches: [UltraStarWord]) {
-        for (index, word) in wordPitches.enumerated() {
-            let pitchBar = UIView(frame: CGRect(x: CGFloat(index) * 30,
-                                                y: CGFloat(100 - word.pitch * 5),
-                                                width: 20,
-                                                height: 20))
-            pitchBar.backgroundColor = .blue
-            self.view.addSubview(pitchBar)
-        }
+        pitchGraphView.pitchData = wordPitches
+        pitchGraphView.setNeedsDisplay()
+    }
+    
+    private func removePitchGraph() {
+        pitchGraphView.pitchData = []
+        pitchGraphView.setNeedsDisplay()
     }
     
     @IBAction func tapOnPauseButton(_ sender: Any) {

@@ -102,7 +102,7 @@
                                 <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="SongCell" id="Aeg-R4-150">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="SongCell" id="Aeg-R4-150">
                                         <rect key="frame" x="0.0" y="50" width="393" height="43.666667938232422"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Aeg-R4-150" id="j2S-8c-fwf">
@@ -147,21 +147,35 @@
                                 </connections>
                             </button>
                             <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="swv-hG-Hy6">
-                                <rect key="frame" x="12" y="292" width="369" height="110"/>
+                                <rect key="frame" x="12" y="371" width="369" height="110"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="110" id="Xqd-Nu-isN"/>
+                                </constraints>
                             </stackView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZRN-xl-1wE" customClass="PitchGraphView" customModule="mixerKaraoke" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="213" width="393" height="128"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="128" id="cWm-mc-L7o"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="8RD-ub-Y4l"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="swv-hG-Hy6" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="52D-w1-GOa"/>
+                            <constraint firstItem="8RD-ub-Y4l" firstAttribute="trailing" secondItem="ZRN-xl-1wE" secondAttribute="trailing" id="5KW-9C-mbs"/>
                             <constraint firstItem="swv-hG-Hy6" firstAttribute="centerY" secondItem="Rkk-Wv-HfQ" secondAttribute="centerY" id="Fn1-pt-faB"/>
+                            <constraint firstItem="swv-hG-Hy6" firstAttribute="top" secondItem="ZRN-xl-1wE" secondAttribute="bottom" constant="30" id="aGA-ck-mkU"/>
                             <constraint firstItem="UfC-CX-Hz0" firstAttribute="bottom" secondItem="8RD-ub-Y4l" secondAttribute="bottom" id="aka-LH-KLf"/>
+                            <constraint firstItem="ZRN-xl-1wE" firstAttribute="leading" secondItem="8RD-ub-Y4l" secondAttribute="leading" id="btp-MF-j7n"/>
                             <constraint firstItem="UfC-CX-Hz0" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="d61-CC-GuT"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="karaokeTextContainer" destination="swv-hG-Hy6" id="f9X-XK-aWi"/>
                         <outlet property="pauseButton" destination="UfC-CX-Hz0" id="jVM-2H-wss"/>
+                        <outlet property="pitchGraphView" destination="ZRN-xl-1wE" id="p9D-O1-6cZ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="6wW-eC-xPK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
