@@ -184,17 +184,17 @@ class DetailPitchesViewController: UIViewController {
         for line in lines {
             if(line.starts(with: "#")) {
                 if (line.starts(with: "#TITLE")) {
-                    let components = line.split(separator: "#TITLE:")
-                    song.title = String(components[0]).replacingOccurrences(of: "\r", with: "")
+                    let components = line.components(separatedBy: "#TITLE:")
+                    song.title = String(components[1]).replacingOccurrences(of: "\r", with: "")
                 } else if (line.starts(with: "#ARTIST")) {
-                    let components = line.split(separator: "#ARTIST:")
-                    song.artist = String(components[0]).replacingOccurrences(of: "\r", with: "")
+                    let components = line.components(separatedBy: "#ARTIST:")
+                    song.artist = String(components[1]).replacingOccurrences(of: "\r", with: "")
                 } else if (line.starts(with: "#BPM")) {
-                    var components = "\(line.split(separator: "#BPM:")[0])".replacingOccurrences(of: "\r", with: "")
+                    var components = "\(line.components(separatedBy: "#BPM:")[1])".replacingOccurrences(of: "\r", with: "")
                     components = components.replacingOccurrences(of: ",", with: ".")
                     song.BPM = (Double(components) ?? 0.0) * 4
                 } else if (line.starts(with: "#GAP")) {
-                    var components = "\(line.split(separator: "#GAP:")[0])".replacingOccurrences(of: "\r", with: "")
+                    var components = "\(line.components(separatedBy: "#GAP:")[1])".replacingOccurrences(of: "\r", with: "")
                     components = components.replacingOccurrences(of: ",", with: ".")
                     song.GAP = (Double(components) ?? 0.0) / 1000.0
                 }

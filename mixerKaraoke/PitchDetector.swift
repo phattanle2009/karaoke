@@ -7,7 +7,7 @@
 
 import AVFoundation
 
-class PitchDetector: ObservableObject {
+class PitchDetector {
     
     private let audioEngine = AVAudioEngine()
     private let inputNode: AVAudioInputNode
@@ -16,7 +16,7 @@ class PitchDetector: ObservableObject {
     private let minPitch: Float = 80.0   // Ngưỡng pitch thấp nhất
     private let maxPitch: Float = 1000.0 // Ngưỡng pitch cao nhất
     
-    @Published var currentPitch: Float = 0.0
+    var currentPitch: Float = 0.0
     private let amplitudeThreshold: Float = 0.01  // Ngưỡng biên độ
     
     init() {
