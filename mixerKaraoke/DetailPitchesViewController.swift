@@ -11,6 +11,7 @@ import AVFoundation
 
 class DetailPitchesViewController: UIViewController {
     
+    @IBOutlet weak var pitchDetectorLabel: UILabel!
     @IBOutlet weak var pitchGraphView: UIStackView!
     @IBOutlet weak var karaokeTextContainer: UIStackView!
     @IBOutlet weak var pauseButton: UIButton!
@@ -19,6 +20,17 @@ class DetailPitchesViewController: UIViewController {
     var audioPlayer: AVAudioPlayer?
     var currentLine = 0
     var drawDone = false
+    var pitchDetector = PitchDetector()
+    
+    //
+    private let audioEngine = AVAudioEngine()
+    private var inputNode: AVAudioInputNode?
+    private let bus: AVAudioNodeBus = 0
+    private let bufferSize: AVAudioFrameCount = 1024
+    private let amplitudeThreshold: Float = 0.08  // Ngưỡng biên độ
+    private let minPitch: Float = 80.0            // Ngưỡng pitch thấp nhất
+    private let maxPitch: Float = 1000.0          // Ngưỡng pitch cao nhất
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,12 +40,70 @@ class DetailPitchesViewController: UIViewController {
             song = parseUltraStarFile(lrcString)
             loadAudio()
             startLyricsSync()
+            setupUI()
+            startAudioEngine()
         }
+    }
+    
+    private func setupUI() {
+        pitchDetectorLabel.text = "Current Pitch: -- Hz"
+        pitchDetectorLabel.textAlignment = .center
+        pitchDetectorLabel.font = UIFont.systemFont(ofSize: 24)
+    }
+    
+    // Bắt đầu AVAudioEngine
+    private func startAudioEngine() {
+        inputNode = audioEngine.inputNode
+        let format = inputNode!.outputFormat(forBus: bus)
+        
+        inputNode!.installTap(onBus: bus, bufferSize: bufferSize, format: format) { (buffer, _) in
+            self.detectPitch(from: buffer)
+        }
+        
+        do {
+            try audioEngine.start()
+        } catch {
+            print("Error starting audio engine: \(error.localizedDescription)")
+        }
+    }
+    
+    // Phát hiện pitch với threshold
+    private func detectPitch(from buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let channelDataArray = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
+        
+        // Tính toán biên độ trung bình
+        let amplitude = channelDataArray.map { abs($0) }.reduce(0, +) / Float(buffer.frameLength)
+        
+        // Bỏ qua nếu biên độ dưới ngưỡng
+        if amplitude < amplitudeThreshold {
+            return
+        }
+        
+        // Phát hiện pitch từ tín hiệu (giả lập đơn giản)
+        let pitch = self.calculateFrequency(from: channelDataArray)
+        
+        // Kiểm tra nếu pitch nằm trong ngưỡng hợp lệ
+        if pitch >= minPitch && pitch <= maxPitch {
+            DispatchQueue.main.async {
+                self.pitchDetectorLabel.text = "Current Pitch: \(String(format: "%.2f", pitch)) Hz"
+                print(pitch)
+            }
+        }
+    }
+    
+    // Hàm tính toán tần số từ dữ liệu (Placeholder - thay bằng thuật toán FFT/autocorrelation thực tế)
+    
+    private func calculateFrequency(from samples: [Float]) -> Float {
+        // Placeholder: Logic phát hiện pitch thực tế cần thêm ở đây
+        return Float.random(in: 80...1000)  // Tạm thời trả về giá trị ngẫu nhiên
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         audioPlayer?.pause()
+        audioEngine.stop()
+        inputNode!.removeTap(onBus: bus)
     }
     
     func loadAudio() {
@@ -183,7 +253,7 @@ class DetailPitchesViewController: UIViewController {
             let width = barWidth * pitch.duration
             let pitchY = CGFloat(pitch.pitch * 6) + 50 // 50 is padding
             
-            let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 120.0))
+            let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 160.0))
             container.translatesAutoresizingMaskIntoConstraints = false
             container.tag = index
             pitchGraphView.addArrangedSubview(container)

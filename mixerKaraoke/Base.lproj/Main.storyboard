@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -147,24 +148,32 @@
                                 </connections>
                             </button>
                             <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="yif-Dv-bOZ">
-                                <rect key="frame" x="88" y="261" width="200" height="200"/>
+                                <rect key="frame" x="88" y="241" width="200" height="160"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="200" id="qIm-dT-RLS"/>
+                                    <constraint firstAttribute="height" constant="160" id="qIm-dT-RLS"/>
                                 </constraints>
                             </stackView>
                             <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="swv-hG-Hy6">
-                                <rect key="frame" x="12" y="491" width="369" height="110"/>
+                                <rect key="frame" x="12" y="431" width="369" height="110"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="110" id="Xqd-Nu-isN"/>
                                 </constraints>
                             </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wEN-Ga-TFy">
+                                <rect key="frame" x="174" y="746" width="45" height="21"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="8RD-ub-Y4l"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="swv-hG-Hy6" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="52D-w1-GOa"/>
                             <constraint firstItem="swv-hG-Hy6" firstAttribute="top" secondItem="yif-Dv-bOZ" secondAttribute="bottom" constant="30" id="5Ia-jj-ar0"/>
-                            <constraint firstItem="swv-hG-Hy6" firstAttribute="centerY" secondItem="Rkk-Wv-HfQ" secondAttribute="centerY" constant="120" id="Fn1-pt-faB"/>
+                            <constraint firstItem="wEN-Ga-TFy" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="7sN-0d-o7Q"/>
+                            <constraint firstItem="swv-hG-Hy6" firstAttribute="centerY" secondItem="Rkk-Wv-HfQ" secondAttribute="centerY" constant="60" id="Fn1-pt-faB"/>
+                            <constraint firstItem="UfC-CX-Hz0" firstAttribute="top" secondItem="wEN-Ga-TFy" secondAttribute="bottom" constant="16" id="K17-d8-DVa"/>
                             <constraint firstItem="UfC-CX-Hz0" firstAttribute="bottom" secondItem="8RD-ub-Y4l" secondAttribute="bottom" id="aka-LH-KLf"/>
                             <constraint firstItem="UfC-CX-Hz0" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="d61-CC-GuT"/>
                             <constraint firstItem="yif-Dv-bOZ" firstAttribute="centerX" secondItem="Rkk-Wv-HfQ" secondAttribute="centerX" id="xsZ-1O-2P9"/>
@@ -173,6 +182,7 @@
                     <connections>
                         <outlet property="karaokeTextContainer" destination="swv-hG-Hy6" id="f9X-XK-aWi"/>
                         <outlet property="pauseButton" destination="UfC-CX-Hz0" id="jVM-2H-wss"/>
+                        <outlet property="pitchDetectorLabel" destination="wEN-Ga-TFy" id="wBJ-yE-avG"/>
                         <outlet property="pitchGraphView" destination="yif-Dv-bOZ" id="G5F-u6-kOA"/>
                     </connections>
                 </viewController>
