@@ -8,6 +8,7 @@
 import UIKit
 import Foundation
 import AVFoundation
+import Accelerate
 
 class DetailPitchesViewController: UIViewController {
     
@@ -221,7 +222,7 @@ extension DetailPitchesViewController {
         }
         
         // detect pitch từ tín hiệu (giả lập đơn giản)
-        let pitch = self.calculateFrequency(from: channelDataArray)
+        let pitch = self.calculateFrequency(from: buffer)
         
         // kiểm tra nếu pitch nằm trong ngưỡng hợp lệ
         if pitch >= minPitch && pitch <= maxPitch {
@@ -232,9 +233,52 @@ extension DetailPitchesViewController {
         }
     }
     
-    // tính toán tần số từ dữ liệu (Placeholder - thay bằng thuật toán FFT/autocorrelation thực tế)
-    private func calculateFrequency(from samples: [Float]) -> Float {
-        // placeholder: logic phát hiện pitch thực tế cần thêm ở đây
-        return Float.random(in: 80...1000)  // tạm thời trả về giá trị ngẫu nhiên
+    // tính toán tần số từ dữ liệu bằng thuật toán FFT/autocorrelation thực tế
+    func calculateFrequency(from buffer: AVAudioPCMBuffer) -> Float {
+        guard let channelData = buffer.floatChannelData?[0] else {
+            return 0.0
+        }
+        
+        let frameCount = Int(buffer.frameLength)
+        let log2n = vDSP_Length(log2(Float(frameCount)))
+        
+        // Cấp phát bộ nhớ cho realp và imagp
+        let realp = UnsafeMutableBufferPointer<Float>.allocate(capacity: frameCount / 2)
+        let imagp = UnsafeMutableBufferPointer<Float>.allocate(capacity: frameCount / 2)
+        defer {
+            realp.deallocate()
+            imagp.deallocate()
+        }
+        
+        // Tạo FFT setup
+        guard let fftSetup = vDSP_create_fftsetup(log2n, Int32(kFFTRadix2)) else {
+            return 0.0
+        }
+        defer {
+            vDSP_destroy_fftsetup(fftSetup)
+        }
+        
+        // Đưa dữ liệu vào FFT
+        var output = DSPSplitComplex(realp: realp.baseAddress!, imagp: imagp.baseAddress!)
+        channelData.withMemoryRebound(to: DSPComplex.self, capacity: frameCount) { pointer in
+            vDSP_ctoz(pointer, 2, &output, 1, vDSP_Length(frameCount / 2))
+        }
+        
+        vDSP_fft_zrip(fftSetup, &output, 1, log2n, FFTDirection(FFT_FORWARD))
+        
+        // Tính biên độ
+        var magnitudes = [Float](repeating: 0.0, count: frameCount / 2)
+        vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(frameCount / 2))
+        
+        // Tìm tần số có biên độ lớn nhất
+        var maxMagnitude: Float = 0
+        var maxIndex: vDSP_Length = 0
+        vDSP_maxvi(&magnitudes, 1, &maxMagnitude, &maxIndex, vDSP_Length(frameCount / 2))
+        
+        // Tính tần số tương ứng
+        let sampleRate = buffer.format.sampleRate
+        let frequency = Float(maxIndex) * Float(sampleRate) / Float(frameCount)
+        
+        return frequency
     }
 }
