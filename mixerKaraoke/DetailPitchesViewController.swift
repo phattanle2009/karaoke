@@ -14,6 +14,7 @@ class DetailPitchesViewController: UIViewController {
     
     @IBOutlet weak var nameOfSongLabel: UILabel!
     @IBOutlet weak var lyricsTableView: UITableView!
+    @IBOutlet weak var pitchGraphScrollView: UIScrollView!
     @IBOutlet weak var pitchGraphView: UIStackView!
     @IBOutlet weak var pitchDetectorLabel: UILabel!
     @IBOutlet weak var bottomButtonWrapper: UIStackView!
@@ -21,12 +22,10 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var pauseButton: UIButton!
     @IBOutlet weak var nextButton: UIButton!
     
-    var song = UltraStarSong(lines: [])
-    var audioPlayer: AVAudioPlayer!
-    var currentLine = 0
-    var pitchDetector = PitchDetector()
-    
-    //
+    private var song = UltraStarSong(lines: [])
+    private var audioPlayer: AVAudioPlayer!
+    private var currentLine = 0
+    private var pitchDetector = PitchDetector()
     private let audioEngine = AVAudioEngine()
     private var inputNode: AVAudioInputNode?
     private let bus: AVAudioNodeBus = 0
@@ -34,7 +33,7 @@ class DetailPitchesViewController: UIViewController {
     private let amplitudeThreshold: Float = 0.08  // Ngưỡng biên độ
     private let minPitch: Float = 80.0            // Ngưỡng pitch thấp nhất
     private let maxPitch: Float = 1000.0          // Ngưỡng pitch cao nhất
-    
+    private var xOffset: CGFloat = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,6 +47,7 @@ class DetailPitchesViewController: UIViewController {
            let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
             song = UltraStarUtils.shared.parseUltraStarFile(lrcString)
             loadAudio()
+            drawPitchGraph()
             startLyricsSync()
             setupUI()
             startAudioEngine()
@@ -85,46 +85,29 @@ class DetailPitchesViewController: UIViewController {
         }
     }
     
+    private func drawPitchGraph() {
+        for line in song.lines {
+            UltraStarUtils.shared.drawPitchGraph(with: line.syllables, to: pitchGraphView)
+        }
+    }
+    
     private func startLyricsSync() {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             let currentTime = self.audioPlayer.currentTime
             for (lineIdx, line) in self.song.lines.enumerated() {
-                for (syllablesIdx, syllables) in line.syllables.enumerated() {
-                    if lineIdx == self.currentLine {
-                        // cập nhật lại line mới, remove cái line cũ đi
-                        if currentTime > line.syllables.last!.startTime {
-                            self.removePitchGraph()
+                    if lineIdx + 1 < self.song.lines.count {
+                        let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
+                        if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
+                            self.currentLine = lineIdx
+                            self.scrollToCurrentLine()
                             break
                         }
-                        
-                        // tô màu cho cái chữ đang hát
-                        if currentTime >= syllables.startTime {
-                            self.pitchGraphView.arrangedSubviews.forEach { subview in
-                                if subview.tag == syllablesIdx {
-                                    subview.subviews.first?.backgroundColor = .systemBlue
-                                }
-                            }
-                        }
-                        
-                        if self.pitchGraphView.arrangedSubviews.isEmpty {
-                            UltraStarUtils.shared.drawPitchGraph(with: line.syllables, to: self.pitchGraphView)
-                        }
-                        
-                        self.lyricsTableView.reloadData()
-                    }
-                }
-                if lineIdx + 1 < self.song.lines.count {
-                    let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
-                    if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
+                    } else if currentTime >= line.syllables.first!.startTime {
                         self.currentLine = lineIdx
                         self.scrollToCurrentLine()
-                        break
                     }
-                } else if currentTime >= line.syllables.first!.startTime {
-                    self.currentLine = lineIdx
-                    self.scrollToCurrentLine()
-                }
             }
+            self.scrollPitchGraph()
         }
     }
     
@@ -132,6 +115,16 @@ class DetailPitchesViewController: UIViewController {
         pitchGraphView.arrangedSubviews.forEach { subview in
             pitchGraphView.removeArrangedSubview(subview)
             subview.removeFromSuperview()
+        }
+    }
+    
+    private func scrollPitchGraph() {
+        let a = (pitchGraphScrollView.contentSize.width + pitchGraphScrollView.frame.width*1.5) / 1970
+        xOffset += a
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.1) {
+                self.pitchGraphScrollView.contentOffset.x = self.xOffset
+            }
         }
     }
     

@@ -15,6 +15,7 @@ class UltraStarUtils {
         let lines = content.components(separatedBy: "\n")
         var song = UltraStarSong(lines: [])
         var lastLine = UltraStarLine(syllables: [])
+        var lastTo: Double = 0.0
         
         for line in lines {
             if(line.starts(with: "#")) {
@@ -33,8 +34,7 @@ class UltraStarUtils {
                     components = components.replacingOccurrences(of: ",", with: ".")
                     song.GAP = (Double(components) ?? 0.0) / 1000.0
                 }
-            }
-            else {
+            } else {
                 if (line.starts(with: ":") || line.starts(with: "*") || line.starts(with: "F")) {
                     let components = getLineComponents(data: line)
                     if components.count >= 5 {
@@ -42,20 +42,40 @@ class UltraStarUtils {
                         let duration = Double(components[2]) ?? 0.0
                         let pitch = Int(components[3]) ?? 0
                         let word = "\(components[4...].joined(separator: " "))".replacingOccurrences(of: "\r", with: "")
-                        let startInSeconds = beatToSeconds(beat: startTime, bpm: song.BPM) + song.GAP
+                        let startInSeconds = beatToSeconds(beat: startTime, bpm: song.BPM, gap: song.GAP)
+                        let durationInSeconds = beatToSeconds(beat: duration, bpm: song.BPM, gap: 0)
                         let lyricWord = UltraStarWord(startTime: startInSeconds,
-                                                      duration: duration,
+                                                      duration: durationInSeconds,
                                                       pitch: pitch,
                                                       word: word)
+                        if song.lines.isEmpty {
+                            lastLine.from = 0
+                        } else {
+                            if lastLine.syllables.isEmpty {
+                                lastLine.from = lastTo
+                            }
+                        }
                         lastLine.syllables.append(lyricWord)
                     }
-                } else if (line.starts(with: "-")) {
-                    let components = "\(line.split(separator: "-")[0])".replacingOccurrences(of: "\r", with: "")
-                    lastLine.from = Double(components) ?? 0.0
+                } else if line.starts(with: "-") { // kết thúc 1 phrase
+                    var blankWord = UltraStarWord()
+                    if song.lines.isEmpty { // cái này là chưa có mẹ gì, add cho nó cái đoạn đầu nhạc
+                        blankWord.duration = song.GAP
+                    } else {
+                        let delay: Double = lastLine.syllables.first!.startTime - lastTo
+                        blankWord.startTime = lastTo
+                        blankWord.duration = delay
+                    }
+                    lastLine.syllables.insert(blankWord, at: 0)
+                    let lastWord = lastLine.syllables.last
+                    lastLine.to = lastWord!.startTime + lastWord!.duration
+                    lastTo = lastLine.to
                     song.lines.append(lastLine)
-                    let a = lastLine.syllables.map { $0.word }.joined()
-                    print(a)
                     lastLine.syllables.removeAll()
+                } else if line.starts(with: "E") { // kết thúc bài hát
+                    let lastWord = lastLine.syllables.last
+                    lastLine.to = lastWord!.startTime + lastWord!.duration
+                    song.lines.append(lastLine)
                 }
             }
         }
@@ -80,13 +100,13 @@ class UltraStarUtils {
         return result
     }
     
-    func beatToSeconds(beat: Double, bpm: Double) -> Double {
-        return (beat / bpm) * 60
+    func beatToSeconds(beat: Double, bpm: Double, gap: Double) -> Double {
+        return gap + (beat / bpm) * 60
     }
     
     func drawPitchGraph(with pitches: [UltraStarWord], to view: UIStackView) {
-        let barHeight: CGFloat = 28
-        let barWidth: CGFloat = 10
+        let barHeight: CGFloat = 10
+        let barWidth: CGFloat = 200.0
         
         for (index, pitch) in pitches.enumerated() {
             let width = barWidth * pitch.duration
@@ -100,7 +120,7 @@ class UltraStarUtils {
             let pitchView = UIView()
             pitchView.translatesAutoresizingMaskIntoConstraints = false
             pitchView.layer.cornerRadius = 5
-            pitchView.backgroundColor = .systemYellow
+            pitchView.backgroundColor = pitch.word.isEmpty ? .clear : .systemYellow
             
             container.addSubview(pitchView)
             
@@ -109,25 +129,7 @@ class UltraStarUtils {
                 pitchView.topAnchor.constraint(equalTo: container.topAnchor, constant: pitchY),
                 pitchView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
                 pitchView.heightAnchor.constraint(equalToConstant: barHeight),
-            ])
-            
-            let label = UILabel()
-            label.text = pitch.word
-            label.lineBreakMode = .byCharWrapping
-            label.textAlignment = .center
-            label.font = .systemFont(ofSize: 14.0)
-            label.textColor = .white
-            label.numberOfLines = 0
-            label.translatesAutoresizingMaskIntoConstraints = false
-            
-            pitchView.addSubview(label)
-            
-            NSLayoutConstraint.activate([
-                label.leadingAnchor.constraint(equalTo: pitchView.leadingAnchor, constant: 0),
-                label.topAnchor.constraint(equalTo: pitchView.topAnchor, constant: 0),
-                label.trailingAnchor.constraint(equalTo: pitchView.trailingAnchor, constant: 0),
-                label.bottomAnchor.constraint(equalTo: pitchView.bottomAnchor, constant: 0),
-                label.widthAnchor.constraint(equalToConstant: width),
+                pitchView.widthAnchor.constraint(equalToConstant: width),
             ])
         }
     }
