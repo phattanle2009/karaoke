@@ -25,7 +25,6 @@ class DetailPitchesViewController: UIViewController {
     private var song = UltraStarSong(lines: [])
     private var audioPlayer: AVAudioPlayer!
     private var currentLine = 0
-    private var pitchDetector = PitchDetector()
     private let audioEngine = AVAudioEngine()
     private var inputNode: AVAudioInputNode?
     private let bus: AVAudioNodeBus = 0
