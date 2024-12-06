@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="9kG-9G-TbI">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
@@ -50,16 +50,11 @@
                             </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="ESK-a5-pl9" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="0ME-Bb-r1n"/>
                             <constraint firstItem="ESK-a5-pl9" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="1Eq-ci-hiR"/>
                         </constraints>
-                        <variation key="default">
-                            <mask key="subviews">
-                                <exclude reference="ESK-a5-pl9"/>
-                            </mask>
-                        </variation>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -213,27 +208,21 @@
                                 </subviews>
                                 <color key="backgroundColor" red="0.84705882349999995" green="0.84705882349999995" blue="0.84705882349999995" alpha="0.3020567602" colorSpace="custom" customColorSpace="calibratedRGB"/>
                             </stackView>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jxN-LC-EUT">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jxN-LC-EUT">
                                 <rect key="frame" x="12" y="276.66666666666669" width="369" height="160"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="yif-Dv-bOZ">
-                                        <subviews>
-                                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vuH-G1-8M5">
-                                                <rect key="frame" x="0.0" y="0.0" width="0.0" height="20.333333333333332"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                <nil key="textColor"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
-                                        </subviews>
-                                    </stackView>
+                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5zr-Dg-TsR" customClass="PitchGraphView" customModule="mixerKaraoke" customModuleProvider="target">
+                                        <rect key="frame" x="64" y="15.333333333333258" width="240" height="128"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                    </view>
                                 </subviews>
                                 <color key="backgroundColor" red="0.84705882349999995" green="0.84705882349999995" blue="0.84705882349999995" alpha="0.3020567602" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="160" id="2Vt-sJ-I3K"/>
-                                    <constraint firstAttribute="trailing" secondItem="yif-Dv-bOZ" secondAttribute="trailing" id="A24-Jl-env"/>
-                                    <constraint firstItem="yif-Dv-bOZ" firstAttribute="top" secondItem="jxN-LC-EUT" secondAttribute="top" id="HWM-Zq-ixO"/>
-                                    <constraint firstItem="yif-Dv-bOZ" firstAttribute="leading" secondItem="jxN-LC-EUT" secondAttribute="leading" id="ccg-ES-UoW"/>
-                                    <constraint firstAttribute="bottom" secondItem="yif-Dv-bOZ" secondAttribute="bottom" id="czh-ea-g6v"/>
+                                    <constraint firstAttribute="trailing" secondItem="5zr-Dg-TsR" secondAttribute="trailing" id="Zod-sr-npx"/>
+                                    <constraint firstItem="5zr-Dg-TsR" firstAttribute="top" secondItem="jxN-LC-EUT" secondAttribute="top" id="fdO-ek-V03"/>
+                                    <constraint firstItem="5zr-Dg-TsR" firstAttribute="leading" secondItem="jxN-LC-EUT" secondAttribute="leading" id="nYv-WI-Orf"/>
+                                    <constraint firstAttribute="bottom" secondItem="5zr-Dg-TsR" secondAttribute="bottom" id="q46-7G-mIR"/>
                                 </constraints>
                             </scrollView>
                         </subviews>
@@ -262,7 +251,7 @@
                         <outlet property="pauseButton" destination="UfC-CX-Hz0" id="jVM-2H-wss"/>
                         <outlet property="pitchDetectorLabel" destination="wEN-Ga-TFy" id="wBJ-yE-avG"/>
                         <outlet property="pitchGraphScrollView" destination="jxN-LC-EUT" id="DI8-WY-hYx"/>
-                        <outlet property="pitchGraphView" destination="yif-Dv-bOZ" id="G5F-u6-kOA"/>
+                        <outlet property="pitchGraphView" destination="5zr-Dg-TsR" id="G2q-DI-w41"/>
                         <outlet property="previousButton" destination="m3v-Op-pCO" id="4vO-5R-bH6"/>
                     </connections>
                 </viewController>
@@ -279,7 +268,7 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="tintColor">
-            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

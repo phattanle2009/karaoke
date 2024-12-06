@@ -15,7 +15,7 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var nameOfSongLabel: UILabel!
     @IBOutlet weak var lyricsTableView: UITableView!
     @IBOutlet weak var pitchGraphScrollView: UIScrollView!
-    @IBOutlet weak var pitchGraphView: UIStackView!
+    @IBOutlet weak var pitchGraphView: PitchGraphView!
     @IBOutlet weak var pitchDetectorLabel: UILabel!
     @IBOutlet weak var bottomButtonWrapper: UIStackView!
     @IBOutlet weak var previousButton: UIButton!
@@ -25,6 +25,7 @@ class DetailPitchesViewController: UIViewController {
     private var song = UltraStarSong(lines: [])
     private var audioPlayer: AVAudioPlayer!
     private var currentLine = 0
+    private var pitchDetector = PitchDetector()
     private let audioEngine = AVAudioEngine()
     private var inputNode: AVAudioInputNode?
     private let bus: AVAudioNodeBus = 0
@@ -49,7 +50,7 @@ class DetailPitchesViewController: UIViewController {
             drawPitchGraph()
             startLyricsSync()
             setupUI()
-            startAudioEngine()
+//            startAudioEngine()
         }
     }
     
@@ -85,9 +86,8 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func drawPitchGraph() {
-        for line in song.lines {
-            UltraStarUtils.shared.drawPitchGraph(with: line.syllables, to: pitchGraphView)
-        }
+        pitchGraphView.lines = song.lines
+        pitchGraphView.setNeedsDisplay()
     }
     
     private func startLyricsSync() {
@@ -107,13 +107,6 @@ class DetailPitchesViewController: UIViewController {
                     }
             }
             self.scrollPitchGraph()
-        }
-    }
-    
-    private func removePitchGraph() {
-        pitchGraphView.arrangedSubviews.forEach { subview in
-            pitchGraphView.removeArrangedSubview(subview)
-            subview.removeFromSuperview()
         }
     }
     
