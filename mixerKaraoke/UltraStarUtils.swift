@@ -105,7 +105,7 @@ class UltraStarUtils {
     }
     
     func drawPitchGraph(with pitches: [UltraStarWord], to view: UIStackView) {
-        let barHeight: CGFloat = 10
+        let barHeight: CGFloat = 20
         let barWidth: CGFloat = 200.0
         
         for (index, pitch) in pitches.enumerated() {
@@ -130,6 +130,25 @@ class UltraStarUtils {
                 pitchView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
                 pitchView.heightAnchor.constraint(equalToConstant: barHeight),
                 pitchView.widthAnchor.constraint(equalToConstant: width),
+            ])
+            
+            let label = UILabel()
+            label.text = pitch.word
+            label.lineBreakMode = .byCharWrapping
+            label.textAlignment = .center
+            label.font = .systemFont(ofSize: 14.0)
+            label.textColor = .white
+            label.numberOfLines = 0
+            label.translatesAutoresizingMaskIntoConstraints = false
+            
+            pitchView.addSubview(label)
+            
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(equalTo: pitchView.leadingAnchor, constant: 0),
+                label.topAnchor.constraint(equalTo: pitchView.topAnchor, constant: 0),
+                label.trailingAnchor.constraint(equalTo: pitchView.trailingAnchor, constant: 0),
+                label.bottomAnchor.constraint(equalTo: pitchView.bottomAnchor, constant: 0),
+                label.widthAnchor.constraint(equalToConstant: width),
             ])
         }
     }

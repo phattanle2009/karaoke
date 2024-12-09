@@ -60,6 +60,7 @@ class LyricsTableViewCell: UITableViewCell {
         label.text = word
         label.font = isHighlight ? .boldSystemFont(ofSize: 14.0) : .italicSystemFont(ofSize: 14.0)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.heightAnchor.constraint(equalToConstant: 46).isActive = true
         
         let highlight = UILabel()
         highlight.backgroundColor = hasUnderCore ? .cyan : .clear

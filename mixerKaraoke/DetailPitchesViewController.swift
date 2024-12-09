@@ -15,7 +15,8 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var nameOfSongLabel: UILabel!
     @IBOutlet weak var lyricsTableView: UITableView!
     @IBOutlet weak var pitchGraphScrollView: UIScrollView!
-    @IBOutlet weak var pitchGraphView: PitchGraphView!
+    @IBOutlet weak var pitchGraphView: UIStackView!
+    @IBOutlet weak var blendColorView: UIView!
     @IBOutlet weak var pitchDetectorLabel: UILabel!
     @IBOutlet weak var bottomButtonWrapper: UIStackView!
     @IBOutlet weak var previousButton: UIButton!
@@ -34,6 +35,7 @@ class DetailPitchesViewController: UIViewController {
     private let minPitch: Float = 80.0            // Ngưỡng pitch thấp nhất
     private let maxPitch: Float = 1000.0          // Ngưỡng pitch cao nhất
     private var xOffset: CGFloat = 0
+    private var stepScrollOffset: CGFloat = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,8 +52,9 @@ class DetailPitchesViewController: UIViewController {
             drawPitchGraph()
             startLyricsSync()
             setupUI()
-//            startAudioEngine()
+            // startAudioEngine()
         }
+        blendColorView.layer.compositingFilter = "hueBlendMode"
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -65,8 +68,12 @@ class DetailPitchesViewController: UIViewController {
         // name
         nameOfSongLabel.text = song.title
         
-        // pitch chart
-        pitchGraphView.layer.cornerRadius = 10
+        // lyrics list and pitch graph
+        [lyricsTableView, pitchGraphScrollView].forEach {
+            $0?.layer.cornerRadius = 10.0
+            $0?.layer.borderWidth = 2.0
+            $0?.layer.borderColor = UIColor.lightGray.cgColor
+        }
         
         // pitch level
         pitchDetectorLabel.text = "Current Pitch: -- Hz"
@@ -82,37 +89,41 @@ class DetailPitchesViewController: UIViewController {
             let url = URL(fileURLWithPath: path)
             audioPlayer = try! AVAudioPlayer(contentsOf: url)
             audioPlayer.play()
+            audioPlayer.volume = 0
         }
     }
     
     private func drawPitchGraph() {
-        pitchGraphView.lines = song.lines
-        pitchGraphView.setNeedsDisplay()
+        for line in song.lines {
+            UltraStarUtils.shared.drawPitchGraph(with: line.syllables, to: pitchGraphView)
+        }
     }
     
     private func startLyricsSync() {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            let currentTime = self.audioPlayer.currentTime
-            for (lineIdx, line) in self.song.lines.enumerated() {
-                    if lineIdx + 1 < self.song.lines.count {
-                        let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
-                        if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
+            if self.audioPlayer.isPlaying {
+                let currentTime = self.audioPlayer.currentTime
+                for (lineIdx, line) in self.song.lines.enumerated() {
+                        if lineIdx + 1 < self.song.lines.count {
+                            let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
+                            if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
+                                self.currentLine = lineIdx
+                                self.scrollToCurrentLine()
+                                break
+                            }
+                        } else if currentTime >= line.syllables.first!.startTime {
                             self.currentLine = lineIdx
                             self.scrollToCurrentLine()
-                            break
                         }
-                    } else if currentTime >= line.syllables.first!.startTime {
-                        self.currentLine = lineIdx
-                        self.scrollToCurrentLine()
-                    }
+                }
+                self.scrollPitchGraph()
             }
-            self.scrollPitchGraph()
         }
     }
     
     private func scrollPitchGraph() {
-        let a = (pitchGraphScrollView.contentSize.width + pitchGraphScrollView.frame.width*1.5) / 1970
-        xOffset += a
+        stepScrollOffset = (pitchGraphScrollView.contentSize.width + pitchGraphScrollView.frame.width * 1.5) / 1970
+        xOffset += stepScrollOffset
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.1) {
                 self.pitchGraphScrollView.contentOffset.x = self.xOffset
@@ -122,6 +133,8 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnPrevButton(_ sender: Any) {
         audioPlayer.stop()
+        xOffset = xOffset - stepScrollOffset * 100
+        xOffset = xOffset <= 0 ? 0 : xOffset
         audioPlayer.currentTime = audioPlayer.currentTime - 10
         audioPlayer.prepareToPlay()
         audioPlayer.play()
@@ -143,6 +156,8 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnNextButton(_ sender: Any) {
         audioPlayer.stop()
+        xOffset = xOffset + stepScrollOffset * 100
+        xOffset = xOffset >= pitchGraphScrollView.contentSize.width ? pitchGraphScrollView.contentSize.width : xOffset
         audioPlayer.currentTime = audioPlayer.currentTime + 10
         audioPlayer.prepareToPlay()
         audioPlayer.play()
