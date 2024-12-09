@@ -122,7 +122,7 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func scrollPitchGraph() {
-        stepScrollOffset = (pitchGraphScrollView.contentSize.width + pitchGraphScrollView.frame.width * 1.5) / 1970
+        stepScrollOffset = (pitchGraphScrollView.contentSize.width - pitchGraphScrollView.frame.width / 3 ) / 1970
         xOffset += stepScrollOffset
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.1) {

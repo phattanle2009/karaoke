@@ -15,7 +15,8 @@ class UltraStarUtils {
         let lines = content.components(separatedBy: "\n")
         var song = UltraStarSong(lines: [])
         var lastLine = UltraStarLine(syllables: [])
-        var lastTo: Double = 0.0
+        var lastToOfWord: Double = 0.0
+        var lastToOfPhrase: Double = 0.0
         
         for line in lines {
             if(line.starts(with: "#")) {
@@ -52,8 +53,17 @@ class UltraStarUtils {
                             lastLine.from = 0
                         } else {
                             if lastLine.syllables.isEmpty {
-                                lastLine.from = lastTo
+                                lastLine.from = lastToOfPhrase
                             }
+                        }
+                        if lastToOfWord == 0.0 { // bắt đầu 1 phrase và chưa có mẹ gì hết
+                            lastToOfWord = startInSeconds + durationInSeconds
+                        } else {
+                            var blankWord = UltraStarWord()
+                            blankWord.startTime = lastToOfWord
+                            blankWord.duration = startInSeconds - lastToOfWord // lấy ra khoảng trống giữa 2 từ
+                            lastToOfWord = startInSeconds + durationInSeconds
+                            lastLine.syllables.append(blankWord)
                         }
                         lastLine.syllables.append(lyricWord)
                     }
@@ -62,19 +72,25 @@ class UltraStarUtils {
                     if song.lines.isEmpty { // cái này là chưa có mẹ gì, add cho nó cái đoạn đầu nhạc
                         blankWord.duration = song.GAP
                     } else {
-                        let delay: Double = lastLine.syllables.first!.startTime - lastTo
-                        blankWord.startTime = lastTo
+                        let delay: Double = lastLine.syllables.first!.startTime - lastToOfPhrase
+                        blankWord.startTime = lastToOfPhrase
                         blankWord.duration = delay
                     }
                     lastLine.syllables.insert(blankWord, at: 0)
                     let lastWord = lastLine.syllables.last
                     lastLine.to = lastWord!.startTime + lastWord!.duration
-                    lastTo = lastLine.to
+                    lastToOfPhrase = lastLine.to
+                    lastToOfWord = 0.0
                     song.lines.append(lastLine)
                     lastLine.syllables.removeAll()
                 } else if line.starts(with: "E") { // kết thúc bài hát
-                    let lastWord = lastLine.syllables.last
-                    lastLine.to = lastWord!.startTime + lastWord!.duration
+                    let lastWord = lastLine.syllables.last!
+                    
+                    var blankWord = UltraStarWord()
+                    blankWord.startTime = lastWord.startTime + lastWord.duration
+                    blankWord.duration =  197 - blankWord.startTime // 197 là duration của song. tính để lấy ra thời gian còn lại
+                    lastLine.syllables.append(blankWord)
+                    lastLine.to = lastWord.startTime + lastWord.duration
                     song.lines.append(lastLine)
                 }
             }
