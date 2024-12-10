@@ -136,7 +136,7 @@ class UltraStarUtils {
             let pitchView = UIView()
             pitchView.translatesAutoresizingMaskIntoConstraints = false
             pitchView.layer.cornerRadius = 5
-            pitchView.backgroundColor = pitch.word.isEmpty ? .clear : .systemYellow
+            pitchView.backgroundColor = pitch.word.isEmpty ? .systemBlue : .systemYellow
             
             container.addSubview(pitchView)
             

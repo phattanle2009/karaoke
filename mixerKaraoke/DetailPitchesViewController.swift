@@ -36,6 +36,7 @@ class DetailPitchesViewController: UIViewController {
     private let maxPitch: Float = 1000.0          // Ngưỡng pitch cao nhất
     private var xOffset: CGFloat = 0
     private var stepScrollOffset: CGFloat = 0
+    private var timer: DispatchSourceTimer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,13 +46,14 @@ class DetailPitchesViewController: UIViewController {
         lyricsTableView.delegate = self
         lyricsTableView.dataSource = self
         
+        setupUI()
+        
         if let filePath = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "txt"),
            let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
             song = UltraStarUtils.shared.parseUltraStarFile(lrcString)
-            loadAudio()
             drawPitchGraph()
+            loadAudio()
             startLyricsSync()
-            setupUI()
             // startAudioEngine()
         }
         blendColorView.layer.compositingFilter = "hueBlendMode"
@@ -88,8 +90,8 @@ class DetailPitchesViewController: UIViewController {
         if let path = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "mp3") {
             let url = URL(fileURLWithPath: path)
             audioPlayer = try! AVAudioPlayer(contentsOf: url)
+            audioPlayer.prepareToPlay()
             audioPlayer.play()
-            audioPlayer.volume = 0
         }
     }
     
@@ -100,7 +102,37 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func startLyricsSync() {
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+//        Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { _ in
+//            if self.audioPlayer.isPlaying {
+//                let currentTime = self.audioPlayer.currentTime
+//                for (lineIdx, line) in self.song.lines.enumerated() {
+//                        if lineIdx + 1 < self.song.lines.count {
+//                            let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
+//                            if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
+//                                self.currentLine = lineIdx
+//                                self.scrollToCurrentLine()
+//                                break
+//                            }
+//                        } else if currentTime >= line.syllables.first!.startTime {
+//                            self.currentLine = lineIdx
+//                            self.scrollToCurrentLine()
+//                        }
+//                }
+//                if self.stepScrollOffset == 0 {
+//                    self.stepScrollOffset = (self.pitchGraphScrollView.contentSize.width
+//                                             + self.pitchGraphScrollView.frame.width * 2 / 3 ) / 19700
+//                }
+//                let offset = currentTime * 100 * self.stepScrollOffset
+//                
+//                self.pitchGraphScrollView.contentOffset.x = offset
+//                print("=====> offset: \(offset)")
+//                print("=====> content offset: \(self.pitchGraphScrollView.contentOffset.x)")
+//            }
+//        }
+        
+        timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timer?.schedule(deadline: .now(), repeating: 0.01)
+        timer?.setEventHandler {
             if self.audioPlayer.isPlaying {
                 let currentTime = self.audioPlayer.currentTime
                 for (lineIdx, line) in self.song.lines.enumerated() {
@@ -116,24 +148,35 @@ class DetailPitchesViewController: UIViewController {
                             self.scrollToCurrentLine()
                         }
                 }
-                self.scrollPitchGraph()
+                let scale = UIScreen.main.scale
+                
+                if self.stepScrollOffset == 0 {
+                    self.stepScrollOffset = self.pitchGraphScrollView.contentSize.width / 19700 // cứ mỗi 0.01 giây nó cần scroll thêm chừng này offset
+                    self.stepScrollOffset = round(self.stepScrollOffset * scale) / scale
+                }
+                let a = self.pitchGraphScrollView.frame.width / 3
+                let offsetX = round(currentTime * 100 * self.stepScrollOffset * scale + a) / scale
+//                self.pitchGraphScrollView.contentOffset.x = offsetX
+                self.scrollPitchGraph(to: offsetX)
+                
+                print("=====> offset: \(offsetX)")
+                print("=====> content offset: \(self.pitchGraphScrollView.contentOffset.x)")
             }
         }
+        timer?.resume()
     }
     
-    private func scrollPitchGraph() {
-        stepScrollOffset = (pitchGraphScrollView.contentSize.width - pitchGraphScrollView.frame.width / 3 ) / 1970
-        xOffset += stepScrollOffset
+    private func scrollPitchGraph(to offset: CGFloat) {
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.1) {
-                self.pitchGraphScrollView.contentOffset.x = self.xOffset
+                self.pitchGraphScrollView.contentOffset.x = offset
             }
         }
     }
     
     @IBAction func tapOnPrevButton(_ sender: Any) {
         audioPlayer.stop()
-        xOffset = xOffset - stepScrollOffset * 100
+        xOffset = xOffset - stepScrollOffset * 1000
         xOffset = xOffset <= 0 ? 0 : xOffset
         audioPlayer.currentTime = audioPlayer.currentTime - 10
         audioPlayer.prepareToPlay()
@@ -156,7 +199,7 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnNextButton(_ sender: Any) {
         audioPlayer.stop()
-        xOffset = xOffset + stepScrollOffset * 100
+        xOffset = xOffset + stepScrollOffset * 1000
         xOffset = xOffset >= pitchGraphScrollView.contentSize.width ? pitchGraphScrollView.contentSize.width : xOffset
         audioPlayer.currentTime = audioPlayer.currentTime + 10
         audioPlayer.prepareToPlay()
