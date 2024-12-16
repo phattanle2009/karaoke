@@ -87,11 +87,12 @@ class UltraStarUtils {
                     lastLine.syllables.removeAll()
                 } else if line.starts(with: "E") { // kết thúc bài hát
                     let lastWord = lastLine.syllables.last!
+                    let startWord = lastLine.syllables.first!
                     
                     var blankWord = UltraStarWord()
-                    blankWord.startTime = lastWord.startTime + lastWord.duration
-                    blankWord.duration =  197 - blankWord.startTime // 197 là duration của song. tính để lấy ra thời gian còn lại
-                    lastLine.syllables.append(blankWord)
+                    blankWord.startTime = lastToOfPhrase
+                    blankWord.duration = startWord.startTime - lastToOfPhrase
+                    lastLine.syllables.insert(blankWord, at: 0)
                     lastLine.to = lastWord.startTime + lastWord.duration
                     song.lines.append(lastLine)
                 }

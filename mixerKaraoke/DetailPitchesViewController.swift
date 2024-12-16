@@ -54,8 +54,11 @@ class DetailPitchesViewController: UIViewController {
             let a = UltraStarUtils.shared.getDetailNotes(from: song)
             print(a)
             drawPitchGraph()
-            loadAudio()
-            startLyricsSync()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                self?.loadAudio()
+                self?.startLyricsSync()
+            }
             // startAudioEngine()
         }
         blendColorView.layer.compositingFilter = "hueBlendMode"
@@ -78,6 +81,8 @@ class DetailPitchesViewController: UIViewController {
             $0?.layer.borderWidth = 2.0
             $0?.layer.borderColor = UIColor.lightGray.cgColor
         }
+        let left = CGFloat((UIScreen.main.bounds.size.width - 24) / 3)
+        pitchGraphScrollView.contentInset = UIEdgeInsets(top: 0.0, left: left, bottom: 0.0, right: 0.0)
         
         // pitch level
         pitchDetectorLabel.text = "Current Pitch: -- Hz"
@@ -128,17 +133,9 @@ class DetailPitchesViewController: UIViewController {
                     self.stepScrollOffset = self.pitchGraphScrollView.contentSize.width / 19700 // cứ mỗi 0.01 giây nó cần scroll thêm chừng này offset
                     self.stepScrollOffset = round(self.stepScrollOffset * scale) / scale
                 }
-                let a = self.pitchGraphScrollView.frame.width / 3
-                let offsetX = a + round(currentTime * 100 * self.stepScrollOffset * scale) / scale
-                DispatchQueue.main.async {
-                    UIView.animate(withDuration: 0.1) {
-                        self.pitchGraphScrollView.contentOffset.x = offsetX
-                    }
-                }
+                let leftInset = self.pitchGraphScrollView.frame.width / 3
+                let offsetX = (round(currentTime * 100 * self.stepScrollOffset * scale) / scale) - leftInset
                 self.scrollPitchGraph(to: offsetX)
-                
-                print("=====> offset: \(offsetX)")
-                print("=====> content offset: \(self.pitchGraphScrollView.contentOffset.x)")
             }
         }
         timer?.resume()
@@ -190,7 +187,7 @@ extension DetailPitchesViewController: UITableViewDelegate, UITableViewDataSourc
     
     func scrollToCurrentLine() {
         let indexPath = IndexPath(row: currentLine, section: 0)
-        lyricsTableView.scrollToRow(at: indexPath, at: .middle, animated: true)
+        lyricsTableView.scrollToRow(at: indexPath, at: .top, animated: true)
         lyricsTableView.reloadData()
     }
     
