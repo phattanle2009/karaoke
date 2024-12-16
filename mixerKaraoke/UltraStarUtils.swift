@@ -10,6 +10,8 @@ import UIKit
 class UltraStarUtils {
     
     static let shared = UltraStarUtils()
+    private let baseMIDI = 60
+    private let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     
     func parseUltraStarFile(_ content: String) -> UltraStarSong {
         let lines = content.components(separatedBy: "\n")
@@ -167,5 +169,41 @@ class UltraStarUtils {
                 label.widthAnchor.constraint(equalToConstant: width),
             ])
         }
+    }
+    
+    func getAmplitudeOfOscillation(from song: UltraStarSong) -> (min: Int, max: Int) {
+        var minPitch = 6119
+        var maxPitch = -6119
+        for line in song.lines {
+            for syllable in line.syllables {
+                minPitch = min(minPitch, syllable.pitch)
+                maxPitch = max(maxPitch, syllable.pitch)
+            }
+        }
+        return (minPitch, maxPitch)
+    }
+    
+    func getDetailNotes(from song: UltraStarSong) -> [Tone] {
+        var result: [Tone] = []
+        let amplitudeOfOscillation = getAmplitudeOfOscillation(from: song)
+        for pitch in amplitudeOfOscillation.min...amplitudeOfOscillation.max {
+            let tone = getToneName(by: pitch + baseMIDI)
+            result.append(tone)
+        }
+        return result
+    }
+    
+    func pitchToNote(pitchValue: Int) -> String {
+        let midiNote = baseMIDI + pitchValue
+        let noteIndex = midiNote % 12
+        let octave = (midiNote / 12) - 1
+        return "\(noteNames[noteIndex])\(octave)"
+    }
+    
+    func voiceToNote(pitchValue: Int) -> String {
+        let midiNote = baseMIDI + pitchValue
+        let noteIndex = midiNote % 12
+        let octave = (midiNote / 12) - 1
+        return "\(noteNames[noteIndex])\(octave)"
     }
 }

@@ -51,6 +51,8 @@ class DetailPitchesViewController: UIViewController {
         if let filePath = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "txt"),
            let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
             song = UltraStarUtils.shared.parseUltraStarFile(lrcString)
+            let a = UltraStarUtils.shared.getDetailNotes(from: song)
+            print(a)
             drawPitchGraph()
             loadAudio()
             startLyricsSync()
@@ -102,34 +104,6 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func startLyricsSync() {
-//        Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { _ in
-//            if self.audioPlayer.isPlaying {
-//                let currentTime = self.audioPlayer.currentTime
-//                for (lineIdx, line) in self.song.lines.enumerated() {
-//                        if lineIdx + 1 < self.song.lines.count {
-//                            let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
-//                            if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
-//                                self.currentLine = lineIdx
-//                                self.scrollToCurrentLine()
-//                                break
-//                            }
-//                        } else if currentTime >= line.syllables.first!.startTime {
-//                            self.currentLine = lineIdx
-//                            self.scrollToCurrentLine()
-//                        }
-//                }
-//                if self.stepScrollOffset == 0 {
-//                    self.stepScrollOffset = (self.pitchGraphScrollView.contentSize.width
-//                                             + self.pitchGraphScrollView.frame.width * 2 / 3 ) / 19700
-//                }
-//                let offset = currentTime * 100 * self.stepScrollOffset
-//                
-//                self.pitchGraphScrollView.contentOffset.x = offset
-//                print("=====> offset: \(offset)")
-//                print("=====> content offset: \(self.pitchGraphScrollView.contentOffset.x)")
-//            }
-//        }
-        
         timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timer?.schedule(deadline: .now(), repeating: 0.01)
         timer?.setEventHandler {
@@ -155,8 +129,12 @@ class DetailPitchesViewController: UIViewController {
                     self.stepScrollOffset = round(self.stepScrollOffset * scale) / scale
                 }
                 let a = self.pitchGraphScrollView.frame.width / 3
-                let offsetX = round(currentTime * 100 * self.stepScrollOffset * scale + a) / scale
-//                self.pitchGraphScrollView.contentOffset.x = offsetX
+                let offsetX = a + round(currentTime * 100 * self.stepScrollOffset * scale) / scale
+                DispatchQueue.main.async {
+                    UIView.animate(withDuration: 0.1) {
+                        self.pitchGraphScrollView.contentOffset.x = offsetX
+                    }
+                }
                 self.scrollPitchGraph(to: offsetX)
                 
                 print("=====> offset: \(offsetX)")
@@ -270,7 +248,7 @@ extension DetailPitchesViewController {
         // kiểm tra nếu pitch nằm trong ngưỡng hợp lệ
         if pitch >= minPitch && pitch <= maxPitch {
             DispatchQueue.main.async {
-                self.pitchDetectorLabel.text = "Current Pitch: \(String(format: "%.2f", pitch)) Hz"
+                self.pitchDetectorLabel.text = "Current Pitch: \(String(format: "%.2f", pitch)) Hz\n Tone: "
                 print(pitch)
             }
         }

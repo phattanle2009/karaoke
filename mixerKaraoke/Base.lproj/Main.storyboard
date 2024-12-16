@@ -246,6 +246,14 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrowtriangle.forward.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="Wli-Nr-ggR">
+                                <rect key="frame" x="134" y="387.33333333333337" width="24" height="19"/>
+                                <color key="tintColor" red="0.81176470590000005" green="0.054901960780000002" blue="0.60784313729999995" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="Wli-Nr-ggR" secondAttribute="height" id="BYk-AY-rpq"/>
+                                    <constraint firstAttribute="width" constant="24" id="SSh-Cu-5n4"/>
+                                </constraints>
+                            </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="8RD-ub-Y4l"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -255,6 +263,7 @@
                             <constraint firstItem="kz8-PI-9dS" firstAttribute="leading" secondItem="8RD-ub-Y4l" secondAttribute="leading" constant="12" id="3Uo-tg-Kfk"/>
                             <constraint firstItem="2KV-Ws-8zs" firstAttribute="bottom" secondItem="jxN-LC-EUT" secondAttribute="bottom" id="4TX-yw-lOo"/>
                             <constraint firstItem="8RD-ub-Y4l" firstAttribute="trailing" secondItem="jxN-LC-EUT" secondAttribute="trailing" constant="12" id="686-ZG-gC4"/>
+                            <constraint firstItem="Wli-Nr-ggR" firstAttribute="leading" secondItem="2KV-Ws-8zs" secondAttribute="leading" id="6Ra-4k-znY"/>
                             <constraint firstItem="GZS-1G-4FF" firstAttribute="height" secondItem="jxN-LC-EUT" secondAttribute="height" id="7Hh-oU-aXw"/>
                             <constraint firstItem="8RD-ub-Y4l" firstAttribute="trailing" secondItem="kz8-PI-9dS" secondAttribute="trailing" constant="12" id="Byb-Ix-LwF"/>
                             <constraint firstItem="GZS-1G-4FF" firstAttribute="width" secondItem="jxN-LC-EUT" secondAttribute="width" multiplier="1:3" id="DG4-9W-bi7"/>
@@ -268,6 +277,7 @@
                             <constraint firstItem="GZS-1G-4FF" firstAttribute="top" secondItem="jxN-LC-EUT" secondAttribute="top" id="fwH-TU-1Hx"/>
                             <constraint firstItem="S7o-Xp-MkD" firstAttribute="top" secondItem="8RD-ub-Y4l" secondAttribute="top" constant="12" id="gTv-ht-KDN"/>
                             <constraint firstItem="kz8-PI-9dS" firstAttribute="top" secondItem="S7o-Xp-MkD" secondAttribute="bottom" constant="32" id="gzb-8a-yxc"/>
+                            <constraint firstItem="Wli-Nr-ggR" firstAttribute="centerY" secondItem="2KV-Ws-8zs" secondAttribute="centerY" id="nZL-r3-Pzk"/>
                             <constraint firstItem="2KV-Ws-8zs" firstAttribute="leading" secondItem="GZS-1G-4FF" secondAttribute="trailing" constant="-1" id="zZz-SC-PXq"/>
                         </constraints>
                     </view>
@@ -292,6 +302,7 @@
     <resources>
         <image name="10.arrow.trianglehead.clockwise" catalog="system" width="119" height="128"/>
         <image name="10.arrow.trianglehead.counterclockwise" catalog="system" width="119" height="128"/>
+        <image name="arrowtriangle.forward.fill" catalog="system" width="128" height="113"/>
         <image name="pause.circle" catalog="system" width="128" height="123"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
