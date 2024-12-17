@@ -1,0 +1,10 @@
+build/
+dist/
+node_modules/
+Pods/
+xcuserdata/
+*.gcda
+*.gcno
+xcodebuild.log
+.bundle
+.DS_Store
