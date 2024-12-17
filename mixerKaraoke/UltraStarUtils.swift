@@ -98,6 +98,8 @@ class UltraStarUtils {
                 }
             }
         }
+        let tones = getDetailNotes(from: song)
+        song.tones = tones
         return song
     }
     
@@ -119,60 +121,64 @@ class UltraStarUtils {
         return result
     }
     
-    func beatToSeconds(beat: Double, bpm: Double, gap: Double) -> Double {
-        return gap + (beat / bpm) * 60
-    }
-    
-    func drawPitchGraph(with pitches: [UltraStarWord], to view: UIStackView) {
+    func drawPitchGraph(with song: UltraStarSong, to view: UIStackView) {
         let barHeight: CGFloat = 20
         let barWidth: CGFloat = 200.0
+        let tones = getDetailNotes(from: song)
         
-        for (index, pitch) in pitches.enumerated() {
-            let width = barWidth * pitch.duration
-            let pitchY = CGFloat(pitch.pitch * 6) + 50 // 50 is padding
-            
-            let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 160.0))
-            container.translatesAutoresizingMaskIntoConstraints = false
-            container.tag = index
-            view.addArrangedSubview(container)
-            
-            let pitchView = UIView()
-            pitchView.translatesAutoresizingMaskIntoConstraints = false
-            pitchView.layer.cornerRadius = 5
-            pitchView.backgroundColor = pitch.word.isEmpty ? .systemBlue : .systemYellow
-            
-            container.addSubview(pitchView)
-            
-            NSLayoutConstraint.activate([
-                pitchView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 0),
-                pitchView.topAnchor.constraint(equalTo: container.topAnchor, constant: pitchY),
-                pitchView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
-                pitchView.heightAnchor.constraint(equalToConstant: barHeight),
-                pitchView.widthAnchor.constraint(equalToConstant: width),
-            ])
-            
-            let label = UILabel()
-            label.text = pitch.word
-            label.lineBreakMode = .byCharWrapping
-            label.textAlignment = .center
-            label.font = .systemFont(ofSize: 14.0)
-            label.textColor = .white
-            label.numberOfLines = 0
-            label.translatesAutoresizingMaskIntoConstraints = false
-            
-            pitchView.addSubview(label)
-            
-            NSLayoutConstraint.activate([
-                label.leadingAnchor.constraint(equalTo: pitchView.leadingAnchor, constant: 0),
-                label.topAnchor.constraint(equalTo: pitchView.topAnchor, constant: 0),
-                label.trailingAnchor.constraint(equalTo: pitchView.trailingAnchor, constant: 0),
-                label.bottomAnchor.constraint(equalTo: pitchView.bottomAnchor, constant: 0),
-                label.widthAnchor.constraint(equalToConstant: width),
-            ])
+        for line in song.lines {
+            for (index, pitch) in line.syllables.enumerated() {
+                let tone = CGFloat(tones.firstIndex(where: {$0.midi == (pitch.pitch + baseMIDI)}) ?? 0)
+                let width = barWidth * pitch.duration
+                let pitchY = CGFloat(tone * barHeight)
+                
+                let container = UIView(frame: CGRect(x: 0, y: 0, width: width, height: CGFloat(tones.count) * barHeight))
+                container.translatesAutoresizingMaskIntoConstraints = false
+                container.tag = index
+                view.addArrangedSubview(container)
+                
+                let pitchView = UIView()
+                pitchView.translatesAutoresizingMaskIntoConstraints = false
+                pitchView.layer.cornerRadius = 5
+                pitchView.backgroundColor = pitch.word.isEmpty ? .systemBlue : .systemYellow
+                
+                container.addSubview(pitchView)
+                
+                NSLayoutConstraint.activate([
+                    pitchView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 0),
+                    pitchView.topAnchor.constraint(equalTo: container.topAnchor, constant: pitchY),
+                    pitchView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
+                    pitchView.heightAnchor.constraint(equalToConstant: barHeight),
+                    pitchView.widthAnchor.constraint(equalToConstant: width),
+                ])
+                
+                let label = UILabel()
+                label.text = pitch.word
+                label.lineBreakMode = .byCharWrapping
+                label.textAlignment = .center
+                label.font = .systemFont(ofSize: 14.0)
+                label.textColor = .white
+                label.numberOfLines = 0
+                label.translatesAutoresizingMaskIntoConstraints = false
+                
+                pitchView.addSubview(label)
+                
+                NSLayoutConstraint.activate([
+                    label.leadingAnchor.constraint(equalTo: pitchView.leadingAnchor, constant: 0),
+                    label.topAnchor.constraint(equalTo: pitchView.topAnchor, constant: 0),
+                    label.trailingAnchor.constraint(equalTo: pitchView.trailingAnchor, constant: 0),
+                    label.bottomAnchor.constraint(equalTo: pitchView.bottomAnchor, constant: 0),
+                    label.widthAnchor.constraint(equalToConstant: width),
+                ])
+            }
         }
     }
     
-    func getAmplitudeOfOscillation(from song: UltraStarSong) -> (min: Int, max: Int) {
+    private func beatToSeconds(beat: Double, bpm: Double, gap: Double) -> Double {
+        return gap + (beat / bpm) * 60
+    }
+    
+    private func getAmplitudeOfOscillation(from song: UltraStarSong) -> (min: Int, max: Int) {
         var minPitch = 6119
         var maxPitch = -6119
         for line in song.lines {
@@ -184,24 +190,25 @@ class UltraStarUtils {
         return (minPitch, maxPitch)
     }
     
-    func getDetailNotes(from song: UltraStarSong) -> [Tone] {
+    private func getDetailNotes(from song: UltraStarSong) -> [Tone] {
         var result: [Tone] = []
         let amplitudeOfOscillation = getAmplitudeOfOscillation(from: song)
         for pitch in amplitudeOfOscillation.min...amplitudeOfOscillation.max {
             let tone = getToneName(by: pitch + baseMIDI)
             result.append(tone)
         }
+        result.reverse()
         return result
     }
     
-    func pitchToNote(pitchValue: Int) -> String {
+    private func pitchToNote(pitchValue: Int) -> String {
         let midiNote = baseMIDI + pitchValue
         let noteIndex = midiNote % 12
         let octave = (midiNote / 12) - 1
         return "\(noteNames[noteIndex])\(octave)"
     }
     
-    func voiceToNote(pitchValue: Int) -> String {
+    private func voiceToNote(pitchValue: Int) -> String {
         let midiNote = baseMIDI + pitchValue
         let noteIndex = midiNote % 12
         let octave = (midiNote / 12) - 1

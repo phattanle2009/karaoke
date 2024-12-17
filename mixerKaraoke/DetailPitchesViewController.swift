@@ -22,6 +22,9 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var previousButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     @IBOutlet weak var nextButton: UIButton!
+    // Constraint
+    @IBOutlet weak var pitchArrow_TCT: NSLayoutConstraint!
+    @IBOutlet weak var pitchGraphScrollView_HCT: NSLayoutConstraint!
     
     private var song = UltraStarSong(lines: [])
     private var audioPlayer: AVAudioPlayer!
@@ -29,11 +32,12 @@ class DetailPitchesViewController: UIViewController {
     private var pitchDetector = PitchDetector()
     private let audioEngine = AVAudioEngine()
     private var inputNode: AVAudioInputNode?
+    private let player = AVAudioPlayerNode()
     private let bus: AVAudioNodeBus = 0
     private let bufferSize: AVAudioFrameCount = 1024
-    private let amplitudeThreshold: Float = 0.08  // Ngưỡng biên độ
-    private let minPitch: Float = 80.0            // Ngưỡng pitch thấp nhất
-    private let maxPitch: Float = 1000.0          // Ngưỡng pitch cao nhất
+    private let amplitudeThreshold: Float = 0.08   // Ngưỡng biên độ
+    private let minPitch: Float = 16.0             // Ngưỡng pitch thấp nhất
+    private let maxPitch: Float = 13289.0          // Ngưỡng pitch cao nhất
     private var xOffset: CGFloat = 0
     private var stepScrollOffset: CGFloat = 0
     private var timer: DispatchSourceTimer?
@@ -51,15 +55,17 @@ class DetailPitchesViewController: UIViewController {
         if let filePath = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "txt"),
            let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
             song = UltraStarUtils.shared.parseUltraStarFile(lrcString)
-            let a = UltraStarUtils.shared.getDetailNotes(from: song)
-            print(a)
+            
             drawPitchGraph()
+            
+            // name
+            nameOfSongLabel.text = song.title
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
                 self?.loadAudio()
                 self?.startLyricsSync()
             }
-            // startAudioEngine()
+            startAudioEngine()
         }
         blendColorView.layer.compositingFilter = "hueBlendMode"
     }
@@ -72,9 +78,6 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func setupUI() {
-        // name
-        nameOfSongLabel.text = song.title
-        
         // lyrics list and pitch graph
         [lyricsTableView, pitchGraphScrollView].forEach {
             $0?.layer.cornerRadius = 10.0
@@ -99,13 +102,14 @@ class DetailPitchesViewController: UIViewController {
             audioPlayer = try! AVAudioPlayer(contentsOf: url)
             audioPlayer.prepareToPlay()
             audioPlayer.play()
+            audioPlayer.volume = 1
+            try! AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSession.PortOverride.speaker)
         }
     }
     
     private func drawPitchGraph() {
-        for line in song.lines {
-            UltraStarUtils.shared.drawPitchGraph(with: line.syllables, to: pitchGraphView)
-        }
+        pitchGraphScrollView_HCT.constant = CGFloat(song.tones.count) * 20.0
+        UltraStarUtils.shared.drawPitchGraph(with: song, to: pitchGraphView)
     }
     
     private func startLyricsSync() {
@@ -241,12 +245,17 @@ extension DetailPitchesViewController {
         
         // detect pitch từ tín hiệu (giả lập đơn giản)
         let pitch = self.calculateFrequency(from: buffer)
+        let tone = getToneName(by: Double(pitch))
+        let matchToneIndex = CGFloat(song.tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
         
         // kiểm tra nếu pitch nằm trong ngưỡng hợp lệ
         if pitch >= minPitch && pitch <= maxPitch {
             DispatchQueue.main.async {
-                self.pitchDetectorLabel.text = "Current Pitch: \(String(format: "%.2f", pitch)) Hz\n Tone: "
-                print(pitch)
+                UIView.animate(withDuration: 0.1) {
+                    self.pitchDetectorLabel.text = "Pitch: \(pitch) Hz - Tone: \(tone.pitch)"
+                    print("====> Pitch: \(pitch) Hz\n====> Tone: \(tone.pitch)")
+                    self.pitchArrow_TCT.constant = matchToneIndex * 20.0
+                }
             }
         }
     }

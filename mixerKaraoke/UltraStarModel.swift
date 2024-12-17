@@ -11,6 +11,7 @@ struct UltraStarSong: Codable {
     var artist: String = ""
     var BPM: Double = 0.0
     var GAP: Double = 0.0
+    var tones: [Tone] = []
     var lines: [UltraStarLine]
 }
 

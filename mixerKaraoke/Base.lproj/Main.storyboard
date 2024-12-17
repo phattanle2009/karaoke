@@ -247,7 +247,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrowtriangle.forward.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="Wli-Nr-ggR">
-                                <rect key="frame" x="134" y="387.33333333333337" width="24" height="19"/>
+                                <rect key="frame" x="134" y="319.33333333333337" width="24" height="19"/>
                                 <color key="tintColor" red="0.81176470590000005" green="0.054901960780000002" blue="0.60784313729999995" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="Wli-Nr-ggR" secondAttribute="height" id="BYk-AY-rpq"/>
@@ -277,7 +277,7 @@
                             <constraint firstItem="GZS-1G-4FF" firstAttribute="top" secondItem="jxN-LC-EUT" secondAttribute="top" id="fwH-TU-1Hx"/>
                             <constraint firstItem="S7o-Xp-MkD" firstAttribute="top" secondItem="8RD-ub-Y4l" secondAttribute="top" constant="12" id="gTv-ht-KDN"/>
                             <constraint firstItem="kz8-PI-9dS" firstAttribute="top" secondItem="S7o-Xp-MkD" secondAttribute="bottom" constant="32" id="gzb-8a-yxc"/>
-                            <constraint firstItem="Wli-Nr-ggR" firstAttribute="centerY" secondItem="2KV-Ws-8zs" secondAttribute="centerY" id="nZL-r3-Pzk"/>
+                            <constraint firstItem="Wli-Nr-ggR" firstAttribute="top" secondItem="jxN-LC-EUT" secondAttribute="top" id="tsu-oz-jx7"/>
                             <constraint firstItem="2KV-Ws-8zs" firstAttribute="leading" secondItem="GZS-1G-4FF" secondAttribute="trailing" constant="-1" id="zZz-SC-PXq"/>
                         </constraints>
                     </view>
@@ -288,8 +288,10 @@
                         <outlet property="nameOfSongLabel" destination="S7o-Xp-MkD" id="51d-GM-kYA"/>
                         <outlet property="nextButton" destination="38u-14-iGC" id="C5g-Td-Rlf"/>
                         <outlet property="pauseButton" destination="UfC-CX-Hz0" id="jVM-2H-wss"/>
+                        <outlet property="pitchArrow_TCT" destination="tsu-oz-jx7" id="TIf-ae-ZAd"/>
                         <outlet property="pitchDetectorLabel" destination="wEN-Ga-TFy" id="wBJ-yE-avG"/>
                         <outlet property="pitchGraphScrollView" destination="jxN-LC-EUT" id="DI8-WY-hYx"/>
+                        <outlet property="pitchGraphScrollView_HCT" destination="2Vt-sJ-I3K" id="cfN-GK-RRM"/>
                         <outlet property="pitchGraphView" destination="g9o-qq-w6B" id="282-Of-YSY"/>
                         <outlet property="previousButton" destination="m3v-Op-pCO" id="4vO-5R-bH6"/>
                     </connections>
@@ -308,7 +310,7 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="tintColor">
-            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
