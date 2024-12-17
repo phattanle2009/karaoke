@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4862EC562D11682F00A75F1D /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4862EC552D11682F00A75F1D /* AudioKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		480C64D62CF04399007E7428 /* mixerKaraoke.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mixerKaraoke.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4862EC562D11682F00A75F1D /* AudioKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = mixerKaraoke;
 			packageProductDependencies = (
+				4862EC552D11682F00A75F1D /* AudioKit */,
 			);
 			productName = mixerKaraoke;
 			productReference = 480C64D62CF04399007E7428 /* mixerKaraoke.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = 480C64CD2CF04399007E7428;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 480C64D72CF04399007E7428 /* Products */;
 			projectDirPath = "";
@@ -148,6 +157,7 @@
 				DEVELOPMENT_TEAM = 829KLR4XZ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mixerKaraoke/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = cc;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -176,6 +186,7 @@
 				DEVELOPMENT_TEAM = 829KLR4XZ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mixerKaraoke/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = cc;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -335,6 +346,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4862EC552D11682F00A75F1D /* AudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */;
+			productName = AudioKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 480C64CE2CF04399007E7428 /* Project object */;
 }

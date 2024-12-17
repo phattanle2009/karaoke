@@ -9,6 +9,7 @@ import UIKit
 import Foundation
 import AVFoundation
 import Accelerate
+import AudioKit
 
 class DetailPitchesViewController: UIViewController {
     
@@ -26,11 +27,19 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var pitchArrow_TCT: NSLayoutConstraint!
     @IBOutlet weak var pitchGraphScrollView_HCT: NSLayoutConstraint!
     
+    // song logic
     private var song = UltraStarSong(lines: [])
-    private var audioPlayer: AVAudioPlayer!
     private var currentLine = 0
-    private var pitchDetector = PitchDetector()
+    private var xOffset: CGFloat = 0
+    private var stepScrollOffset: CGFloat = 0
+    private var timer: DispatchSourceTimer?
+    
+    // audio input and output
+    private var audioPlayer: AVAudioPlayer!
     private let audioEngine = AVAudioEngine()
+    private var mic: AudioEngine.InputNode!
+    private var fftTap: FFTTap!
+    private var engine: AudioEngine!
     private var inputNode: AVAudioInputNode?
     private let player = AVAudioPlayerNode()
     private let bus: AVAudioNodeBus = 0
@@ -38,9 +47,7 @@ class DetailPitchesViewController: UIViewController {
     private let amplitudeThreshold: Float = 0.08   // Ngưỡng biên độ
     private let minPitch: Float = 16.0             // Ngưỡng pitch thấp nhất
     private let maxPitch: Float = 13289.0          // Ngưỡng pitch cao nhất
-    private var xOffset: CGFloat = 0
-    private var stepScrollOffset: CGFloat = 0
-    private var timer: DispatchSourceTimer?
+    private var updateCounter = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,7 +72,8 @@ class DetailPitchesViewController: UIViewController {
                 self?.loadAudio()
                 self?.startLyricsSync()
             }
-            startAudioEngine()
+            setupAudioEngine()
+            //startAudioEngine()
         }
         blendColorView.layer.compositingFilter = "hueBlendMode"
     }
@@ -75,6 +83,12 @@ class DetailPitchesViewController: UIViewController {
         audioPlayer.pause()
         audioEngine.stop()
         inputNode!.removeTap(onBus: bus)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        fftTap.stop()
+        engine.stop()
     }
     
     private func setupUI() {
@@ -107,6 +121,69 @@ class DetailPitchesViewController: UIViewController {
         }
     }
     
+    private func setupAudioEngine() {
+        // Khởi tạo Audio Engine
+        engine = AudioEngine()
+        
+        // Lấy microphone input
+        guard let input = engine.input else { return }
+        mic = input
+        
+        // Thêm FFT Tap để lấy dữ liệu FFT
+        fftTap = FFTTap(mic) { fftData in
+            DispatchQueue.main.async {
+                self.analyzeFFTData(fftData)
+            }
+        }
+        
+        // Kích hoạt microphone input
+        engine.output = Mixer(mic)
+        
+        fftTap.isNormalized = false
+        fftTap.start()
+        
+        do {
+            try engine.start()
+            
+        } catch {
+            print("Audio Engine Error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func analyzeFFTData(_ fftData: [Float]) {
+        // Tìm giá trị lớn nhất trong FFT data (tần số trội)
+        updateCounter += 1
+        if updateCounter % 10 == 0 {
+            restartEngineIfNeeded()
+        } else {
+            if let maxIndex = fftData.firstIndex(of: fftData.max() ?? 0) {
+                let frequency = Float(maxIndex) * Float(engine.input!.outputFormat.sampleRate) / Float(fftData.count)
+                if frequency == 0 || frequency > Float(song.tones.first!.frequency) || frequency < Float(song.tones.last!.frequency) { return }
+                let midiNote = Int(round(69 + 12 * log2(frequency / 440.0)))
+                let tone = getToneName(by: midiNote)
+                let matchToneIndex = CGFloat(song.tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
+                
+                DispatchQueue.main.async {
+                    UIView.animate(withDuration: 1) {
+                        self.pitchDetectorLabel.text = "Pitch: \(Int(frequency)) Hz - Tone: \(tone.pitch)"
+                        self.pitchArrow_TCT.constant = matchToneIndex * 20.0
+                    }
+                }
+            }
+        }
+    }
+    
+    private func restartEngineIfNeeded() {
+        if !engine.avEngine.isRunning {
+            do {
+                try engine.start()
+            } catch {
+                print("Error restarting Audio Engine: \(error)")
+            }
+        }
+    }
+
+    
     private func drawPitchGraph() {
         pitchGraphScrollView_HCT.constant = CGFloat(song.tones.count) * 20.0
         UltraStarUtils.shared.drawPitchGraph(with: song, to: pitchGraphView)
@@ -119,17 +196,17 @@ class DetailPitchesViewController: UIViewController {
             if self.audioPlayer.isPlaying {
                 let currentTime = self.audioPlayer.currentTime
                 for (lineIdx, line) in self.song.lines.enumerated() {
-                        if lineIdx + 1 < self.song.lines.count {
-                            let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
-                            if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
-                                self.currentLine = lineIdx
-                                self.scrollToCurrentLine()
-                                break
-                            }
-                        } else if currentTime >= line.syllables.first!.startTime {
+                    if lineIdx + 1 < self.song.lines.count {
+                        let nextTime = self.song.lines[lineIdx + 1].syllables.first!.startTime
+                        if currentTime >= line.syllables.first!.startTime && currentTime < nextTime {
                             self.currentLine = lineIdx
                             self.scrollToCurrentLine()
+                            break
                         }
+                    } else if currentTime >= line.syllables.first!.startTime {
+                        self.currentLine = lineIdx
+                        self.scrollToCurrentLine()
+                    }
                 }
                 let scale = UIScreen.main.scale
                 
