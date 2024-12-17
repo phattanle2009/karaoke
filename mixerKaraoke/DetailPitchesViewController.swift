@@ -8,7 +8,6 @@
 import UIKit
 import Foundation
 import AVFoundation
-import Accelerate
 import AudioKit
 
 class DetailPitchesViewController: UIViewController {
@@ -36,17 +35,9 @@ class DetailPitchesViewController: UIViewController {
     
     // audio input and output
     private var audioPlayer: AVAudioPlayer!
-    private let audioEngine = AVAudioEngine()
     private var mic: AudioEngine.InputNode!
     private var fftTap: FFTTap!
     private var engine: AudioEngine!
-    private var inputNode: AVAudioInputNode?
-    private let player = AVAudioPlayerNode()
-    private let bus: AVAudioNodeBus = 0
-    private let bufferSize: AVAudioFrameCount = 1024
-    private let amplitudeThreshold: Float = 0.08   // Ngưỡng biên độ
-    private let minPitch: Float = 16.0             // Ngưỡng pitch thấp nhất
-    private let maxPitch: Float = 13289.0          // Ngưỡng pitch cao nhất
     private var updateCounter = 0
     
     override func viewDidLoad() {
@@ -81,8 +72,6 @@ class DetailPitchesViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         audioPlayer.pause()
-        audioEngine.stop()
-        inputNode!.removeTap(onBus: bus)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -144,7 +133,6 @@ class DetailPitchesViewController: UIViewController {
         
         do {
             try engine.start()
-            
         } catch {
             print("Audio Engine Error: \(error.localizedDescription)")
         }
@@ -182,7 +170,6 @@ class DetailPitchesViewController: UIViewController {
             }
         }
     }
-
     
     private func drawPitchGraph() {
         pitchGraphScrollView_HCT.constant = CGFloat(song.tones.count) * 20.0
@@ -286,103 +273,5 @@ extension DetailPitchesViewController: UITableViewDelegate, UITableViewDataSourc
         let currentTime = player.currentTime
         cell.configCell(data: data.syllables, isHighlight: isHighlight, currentTime: currentTime)
         return cell
-    }
-}
-
-// MARK: - Pitch Detector
-extension DetailPitchesViewController {
-    
-    private func startAudioEngine() {
-        inputNode = audioEngine.inputNode
-        let format = inputNode!.outputFormat(forBus: bus)
-        
-        inputNode!.installTap(onBus: bus, bufferSize: bufferSize, format: format) { (buffer, _) in
-            self.detectPitch(from: buffer)
-        }
-        
-        do {
-            try audioEngine.start()
-        } catch {
-            print("Error starting audio engine: \(error.localizedDescription)")
-        }
-    }
-    
-    // detect pitch với threshold
-    private func detectPitch(from buffer: AVAudioPCMBuffer) {
-        guard let channelData = buffer.floatChannelData?[0] else { return }
-        let channelDataArray = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
-        
-        // biên độ trung bình
-        let amplitude = channelDataArray.map { abs($0) }.reduce(0, +) / Float(buffer.frameLength)
-        
-        // bỏ qua biên độ dưới ngưỡng
-        if amplitude < amplitudeThreshold {
-            return
-        }
-        
-        // detect pitch từ tín hiệu (giả lập đơn giản)
-        let pitch = self.calculateFrequency(from: buffer)
-        let tone = getToneName(by: Double(pitch))
-        let matchToneIndex = CGFloat(song.tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
-        
-        // kiểm tra nếu pitch nằm trong ngưỡng hợp lệ
-        if pitch >= minPitch && pitch <= maxPitch {
-            DispatchQueue.main.async {
-                UIView.animate(withDuration: 0.1) {
-                    self.pitchDetectorLabel.text = "Pitch: \(pitch) Hz - Tone: \(tone.pitch)"
-                    print("====> Pitch: \(pitch) Hz\n====> Tone: \(tone.pitch)")
-                    self.pitchArrow_TCT.constant = matchToneIndex * 20.0
-                }
-            }
-        }
-    }
-    
-    // tính toán tần số từ dữ liệu bằng thuật toán FFT/autocorrelation thực tế
-    func calculateFrequency(from buffer: AVAudioPCMBuffer) -> Float {
-        guard let channelData = buffer.floatChannelData?[0] else {
-            return 0.0
-        }
-        
-        let frameCount = Int(buffer.frameLength)
-        let log2n = vDSP_Length(log2(Float(frameCount)))
-        
-        // Cấp phát bộ nhớ cho realp và imagp
-        let realp = UnsafeMutableBufferPointer<Float>.allocate(capacity: frameCount / 2)
-        let imagp = UnsafeMutableBufferPointer<Float>.allocate(capacity: frameCount / 2)
-        defer {
-            realp.deallocate()
-            imagp.deallocate()
-        }
-        
-        // Tạo FFT setup
-        guard let fftSetup = vDSP_create_fftsetup(log2n, Int32(kFFTRadix2)) else {
-            return 0.0
-        }
-        defer {
-            vDSP_destroy_fftsetup(fftSetup)
-        }
-        
-        // Đưa dữ liệu vào FFT
-        var output = DSPSplitComplex(realp: realp.baseAddress!, imagp: imagp.baseAddress!)
-        channelData.withMemoryRebound(to: DSPComplex.self, capacity: frameCount) { pointer in
-            vDSP_ctoz(pointer, 2, &output, 1, vDSP_Length(frameCount / 2))
-        }
-        
-        vDSP_fft_zrip(fftSetup, &output, 1, log2n, FFTDirection(FFT_FORWARD))
-        
-        // Tính biên độ
-        var magnitudes = [Float](repeating: 0.0, count: frameCount / 2)
-        vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(frameCount / 2))
-        
-        // Tìm tần số có biên độ lớn nhất
-        var maxMagnitude: Float = 0
-        var maxIndex: vDSP_Length = 0
-        vDSP_maxvi(&magnitudes, 1, &maxMagnitude, &maxIndex, vDSP_Length(frameCount / 2))
-        
-        // Tính tần số tương ứng
-        let sampleRate = buffer.format.sampleRate
-        let frequency = Float(maxIndex) * Float(sampleRate) / Float(frameCount)
-        
-        return frequency
     }
 }
