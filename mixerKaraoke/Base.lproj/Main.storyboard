@@ -288,6 +288,7 @@
                         <outlet property="nameOfSongLabel" destination="S7o-Xp-MkD" id="51d-GM-kYA"/>
                         <outlet property="nextButton" destination="38u-14-iGC" id="C5g-Td-Rlf"/>
                         <outlet property="pauseButton" destination="UfC-CX-Hz0" id="jVM-2H-wss"/>
+                        <outlet property="pitchArrow" destination="Wli-Nr-ggR" id="bG7-fI-dKz"/>
                         <outlet property="pitchArrow_TCT" destination="tsu-oz-jx7" id="TIf-ae-ZAd"/>
                         <outlet property="pitchDetectorLabel" destination="wEN-Ga-TFy" id="wBJ-yE-avG"/>
                         <outlet property="pitchGraphScrollView" destination="jxN-LC-EUT" id="DI8-WY-hYx"/>

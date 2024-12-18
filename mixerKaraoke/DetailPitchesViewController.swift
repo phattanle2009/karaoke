@@ -10,6 +10,20 @@ import Foundation
 import AVFoundation
 import AudioKit
 
+class KalmanFilter {
+    private var estimate: Float = 0.0
+    private var errorEstimate: Float = 1.0
+    private let processNoise: Float = 1e-2
+    private let measurementNoise: Float = 1e-1
+
+    func update(measurement: Float) -> Float {
+        let kalmanGain = errorEstimate / (errorEstimate + measurementNoise)
+        estimate = estimate + kalmanGain * (measurement - estimate)
+        errorEstimate = (1 - kalmanGain) * errorEstimate + abs(estimate) * processNoise
+        return estimate
+    }
+}
+
 class DetailPitchesViewController: UIViewController {
     
     @IBOutlet weak var nameOfSongLabel: UILabel!
@@ -22,6 +36,7 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var previousButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     @IBOutlet weak var nextButton: UIButton!
+    @IBOutlet weak var pitchArrow: UIImageView!
     // Constraint
     @IBOutlet weak var pitchArrow_TCT: NSLayoutConstraint!
     @IBOutlet weak var pitchGraphScrollView_HCT: NSLayoutConstraint!
@@ -39,6 +54,9 @@ class DetailPitchesViewController: UIViewController {
     private var fftTap: FFTTap!
     private var engine: AudioEngine!
     private var updateCounter = 0
+    private let kalmanFilter = KalmanFilter()
+    private var frequencyBuffer: [Float] = []
+    private let bufferSize = 10  // Số lượng giá trị tần số để làm mịn
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -146,19 +164,34 @@ class DetailPitchesViewController: UIViewController {
         } else {
             if let maxIndex = fftData.firstIndex(of: fftData.max() ?? 0) {
                 let frequency = Float(maxIndex) * Float(engine.input!.outputFormat.sampleRate) / Float(fftData.count)
+                let filteredFrequency = kalmanFilter.update(measurement: frequency)
                 if frequency == 0 || frequency > Float(song.tones.first!.frequency) || frequency < Float(song.tones.last!.frequency) { return }
                 let midiNote = Int(round(69 + 12 * log2(frequency / 440.0)))
                 let tone = getToneName(by: midiNote)
                 let matchToneIndex = CGFloat(song.tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
                 
+                let smoothFrequency = smoothFrequency(newFrequency: filteredFrequency)
+                print("=====> frequency: \(frequency)")
+                print("=====> smoothFrequency: \(smoothFrequency)")
+                print("=====> filteredFrequency: \(filteredFrequency)")
+                
                 DispatchQueue.main.async {
                     UIView.animate(withDuration: 1) {
                         self.pitchDetectorLabel.text = "Pitch: \(Int(frequency)) Hz - Tone: \(tone.pitch)"
-                        self.pitchArrow_TCT.constant = matchToneIndex * 20.0
+                        self.pitchArrow.transform = CGAffineTransform(translationX: 0, y: matchToneIndex * 20.0)
                     }
                 }
             }
         }
+    }
+    
+    private func smoothFrequency(newFrequency: Float) -> Float {
+        if frequencyBuffer.count >= bufferSize {
+            frequencyBuffer.removeFirst()
+        }
+        frequencyBuffer.append(newFrequency)
+        
+        return frequencyBuffer.reduce(0, +) / Float(frequencyBuffer.count)
     }
     
     private func restartEngineIfNeeded() {
