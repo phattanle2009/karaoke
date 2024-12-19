@@ -1,0 +1,11 @@
+framework module SwitchboardSDK {
+  umbrella header "SwitchboardSDK.h"
+  export *
+
+  module * { export * }
+}
+
+module SwitchboardSDK.Swift {
+  header "SwitchboardSDK-Swift.h"
+  requires objc
+}

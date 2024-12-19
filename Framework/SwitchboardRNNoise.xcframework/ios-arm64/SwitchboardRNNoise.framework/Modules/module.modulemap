@@ -1,0 +1,6 @@
+framework module SwitchboardRNNoise {
+  umbrella header "SwitchboardRNNoise.h"
+  export *
+
+  module * { export * }
+}

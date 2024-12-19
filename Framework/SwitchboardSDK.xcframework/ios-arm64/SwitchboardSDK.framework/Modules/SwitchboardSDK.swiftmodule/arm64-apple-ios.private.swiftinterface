@@ -1,0 +1,205 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.10 (swiftlang-5.10.0.13 clang-1500.3.9.4)
+// swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-bare-slash-regex -module-name SwitchboardSDK
+import AVFoundation
+import CoreAudioTypes
+import Foundation
+import Swift
+@_exported import SwitchboardSDK
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@objc @_inheritsConvenienceInitializers @available(iOS 13.0, *)
+public class AudioEngineV2 : ObjectiveC.NSObject, SwitchboardSDK.AudioEngineProtocol, SwitchboardSDK.SBIOSAudioIODelegate {
+  @objc public var currentRouteOutputType: AVFAudio.AVAudioSession.Port? {
+    @objc get
+    @objc set
+  }
+  @objc public var currentRouteInputType: AVFAudio.AVAudioSession.Port? {
+    @objc get
+    @objc set
+  }
+  @objc public var currentOutputRoute: AVFAudio.AVAudioSession.Port {
+    @objc get
+  }
+  @objc public var currentInputRoute: AVFAudio.AVAudioSession.Port {
+    @objc get
+  }
+  @objc public func isCurrentOutputA2DP() -> (Swift.Bool)
+  @objc public func isUsingHeadphones() -> (Swift.Bool)
+  @objc public var useThirdPartyEchoCanceller: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var lastAudioSessionState: SwitchboardSDK.AudioSessionState? {
+    @objc get
+  }
+  @objc public var isVoiceProcessingEnabled: Swift.Bool {
+    @objc get
+  }
+  @objc public var engineShouldRun: Swift.Bool {
+    get
+  }
+  @objc public var needsEchoCancellation: Swift.Bool {
+    @objc get
+  }
+  @objc public var shouldRecord: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var mixWithOthers: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var allowBluetoothA2DP: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc weak public var routeChangeDelegate: (any SwitchboardSDK.RouteChangeDelegate)?
+  @objc public var audioDelegate: (any SwitchboardSDK.AudioProcessorDelegate)? {
+    @objc get
+    @objc set
+  }
+  @objc override dynamic public init()
+  @objc public func start()
+  @objc public func stop()
+  @objc public func reconfigure(shouldRecord: Swift.Bool)
+  @objc public func outputSampleRateChanged(_ audioUnit: SwitchboardSDK.SBIOSAudioIO, sampleRate: Swift.Int32)
+  @objc deinit
+}
+public protocol OpenTokRoomResponse {
+  var apiKey: Swift.String { get }
+  var sessionId: Swift.String { get }
+  var token: Swift.String { get }
+}
+public protocol AgoraRoomResponse {
+  var token: Swift.String { get }
+}
+public protocol RoomAPI {
+  func openTokRoom(roomID: Swift.String, password: Swift.String?, completion: @escaping (Swift.Result<any SwitchboardSDK.OpenTokRoomResponse, any Swift.Error>) -> Swift.Void)
+  func agoraRoom(roomID: Swift.String, password: Swift.String?, completion: @escaping (Swift.Result<any SwitchboardSDK.AgoraRoomResponse, any Swift.Error>) -> Swift.Void)
+}
+public enum SwitchboardAPIError : Swift.Error {
+  case serverError(message: Swift.String)
+}
+extension SwitchboardSDK.SwitchboardAPIError : Foundation.LocalizedError {
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+public struct SwitchboardAPI : SwitchboardSDK.RoomAPI {
+  public init()
+  public func openTokRoom(roomID: Swift.String, password: Swift.String?, completion: @escaping (Swift.Result<any SwitchboardSDK.OpenTokRoomResponse, any Swift.Error>) -> Swift.Void)
+  public func agoraRoom(roomID: Swift.String, password: Swift.String?, completion: @escaping (Swift.Result<any SwitchboardSDK.AgoraRoomResponse, any Swift.Error>) -> Swift.Void)
+}
+public protocol AudioStreamerDelegate : AnyObject {
+  func audioStreamerDidFinishStreamingAudio(_ audioStreamer: SwitchboardSDK.AudioStreamer)
+}
+@objc @_inheritsConvenienceInitializers public class AudioStreamer : ObjectiveC.NSObject, SwitchboardSDK.StreamPlayerNodeDelegate {
+  @objc override dynamic public init()
+  @objc public func load(url: Foundation.URL)
+  @objc public func play()
+  @objc public func streamPlayerNode(_ streamPlayer: Swift.UnsafeMutableRawPointer!, didChangeSampleRate sampleRate: Swift.UInt32)
+  @objc public func stop()
+  @objc public func getAudioBus() -> any SwitchboardSDK.SBAudioSource
+  @objc public func getNumOfChannels() -> Swift.UInt32
+  @objc deinit
+}
+@objc @_inheritsConvenienceInitializers @available(iOS 13.0, *)
+public class AudioEngineV3 : ObjectiveC.NSObject, SwitchboardSDK.AudioEngineProtocol {
+  @objc public var currentRouteOutputType: AVFAudio.AVAudioSession.Port? {
+    @objc get
+    @objc set
+  }
+  @objc public var currentRouteInputType: AVFAudio.AVAudioSession.Port? {
+    @objc get
+    @objc set
+  }
+  @objc public var currentOutputRoute: AVFAudio.AVAudioSession.Port {
+    @objc get
+  }
+  @objc public var currentInputRoute: AVFAudio.AVAudioSession.Port {
+    @objc get
+  }
+  @objc public func isCurrentOutputA2DP() -> (Swift.Bool)
+  @objc public func isUsingHeadphones() -> (Swift.Bool)
+  @objc public var useThirdPartyEchoCanceller: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var lastAudioSessionState: SwitchboardSDK.AudioSessionState? {
+    @objc get
+  }
+  @objc public var isVoiceProcessingEnabled: Swift.Bool {
+    @objc get
+  }
+  @objc public var engineShouldRun: Swift.Bool {
+    get
+  }
+  @objc public var needsEchoCancellation: Swift.Bool {
+    @objc get
+  }
+  @objc public var shouldRecord: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var mixWithOthers: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var allowBluetoothA2DP: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc weak public var routeChangeDelegate: (any SwitchboardSDK.RouteChangeDelegate)?
+  @objc public var audioDelegate: (any SwitchboardSDK.AudioProcessorDelegate)? {
+    @objc get
+    @objc set
+  }
+  @objc override dynamic public init()
+  @objc public func start()
+  @objc public func stop()
+  @objc public func reconfigure(shouldRecord: Swift.Bool)
+  @objc deinit
+}
+public class CallbackLogDestination : SwitchboardSDK.SBLogDestination {
+  public init(logCallback: @escaping (_ level: SwitchboardSDK.SBLogLevel, _ message: Swift.String) -> Swift.Void)
+  @objc public func log(_ logLevel: SwitchboardSDK.SBLogLevel, message logMessage: Swift.String)
+  @objc deinit
+}
+@objc public protocol RouteChangeDelegate {
+  @objc func audioEngine(_: any SwitchboardSDK.AudioEngineProtocol, inputRouteChanged currentInputRoute: AVFAudio.AVAudioSession.Port)
+  @objc func audioEngine(_: any SwitchboardSDK.AudioEngineProtocol, outputRouteChanged currentOutputRoute: AVFAudio.AVAudioSession.Port)
+}
+@objc public protocol AudioEngineProtocol {
+  @objc var useThirdPartyEchoCanceller: Swift.Bool { get set }
+  @objc var isVoiceProcessingEnabled: Swift.Bool { get }
+  @objc var engineShouldRun: Swift.Bool { get }
+  @objc var needsEchoCancellation: Swift.Bool { get }
+  @objc var shouldRecord: Swift.Bool { get set }
+  @objc var mixWithOthers: Swift.Bool { get set }
+  @objc var allowBluetoothA2DP: Swift.Bool { get set }
+  @objc func isCurrentOutputA2DP() -> Swift.Bool
+  @objc var currentInputRoute: AVFAudio.AVAudioSession.Port { get }
+  @objc var currentOutputRoute: AVFAudio.AVAudioSession.Port { get }
+  @objc var routeChangeDelegate: (any SwitchboardSDK.RouteChangeDelegate)? { get set }
+  @objc var audioDelegate: (any SwitchboardSDK.AudioProcessorDelegate)? { get set }
+  @objc var lastAudioSessionState: SwitchboardSDK.AudioSessionState? { get }
+  @objc func start()
+  @objc func stop()
+  @objc func reconfigure(shouldRecord: Swift.Bool)
+}
+@objc @_hasMissingDesignatedInitializers @objcMembers public class AudioSessionState : ObjectiveC.NSObject {
+  @objc public var category: Swift.String
+  @objc public var mode: Swift.String
+  @objc public var options: Swift.String
+  @objc public var sampleRate: Swift.Double
+  @objc public var inputLatency: Foundation.TimeInterval
+  @objc public var outputLatency: Foundation.TimeInterval
+  @objc public var IOBufferDuration: Foundation.TimeInterval
+  @objc public var otherAudioPlaying: Swift.Bool
+  @objc public var secondaryAudioShouldBeSilencedHint: Swift.Bool
+  @objc public var currentRoute: Swift.String
+  @objc deinit
+}
