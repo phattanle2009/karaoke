@@ -42,7 +42,7 @@ class DetailPitchesViewController: UIViewController {
     @IBOutlet weak var pitchGraphScrollView_HCT: NSLayoutConstraint!
     
     // song logic
-    private var song = UltraStarSong(lines: [])
+    var song: UltraStarSong!
     private var currentLine = 0
     private var xOffset: CGFloat = 0
     private var stepScrollOffset: CGFloat = 0
@@ -67,23 +67,12 @@ class DetailPitchesViewController: UIViewController {
         lyricsTableView.dataSource = self
         
         setupUI()
-        
-        if let filePath = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "txt"),
-           let lrcString = try? String(contentsOfFile: filePath, encoding: .utf8) {
-            song = UltraStarUtils.shared.parseUltraStarFile(lrcString)
-            
-            drawPitchGraph()
-            
-            // name
-            nameOfSongLabel.text = song.title
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-                self?.loadAudio()
-                self?.startLyricsSync()
-            }
-            setupAudioEngine()
-            //startAudioEngine()
+        drawPitchGraph()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.loadAudio()
+            self?.startLyricsSync()
         }
+        setupAudioEngine()
         blendColorView.layer.compositingFilter = "hueBlendMode"
     }
     
@@ -99,6 +88,9 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func setupUI() {
+        // name
+        nameOfSongLabel.text = song.title
+        
         // lyrics list and pitch graph
         [lyricsTableView, pitchGraphScrollView].forEach {
             $0?.layer.cornerRadius = 10.0
@@ -118,7 +110,7 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func loadAudio() {
-        if let path = Bundle.main.path(forResource: "KjetilMrlandDebrahScarlett", ofType: "mp3") {
+        if let path = Bundle.main.path(forResource: song.fileName, ofType: "mp3") {
             let url = URL(fileURLWithPath: path)
             audioPlayer = try! AVAudioPlayer(contentsOf: url)
             audioPlayer.prepareToPlay()
@@ -231,7 +223,8 @@ class DetailPitchesViewController: UIViewController {
                 let scale = UIScreen.main.scale
                 
                 if self.stepScrollOffset == 0 {
-                    self.stepScrollOffset = self.pitchGraphScrollView.contentSize.width / 19700 // cứ mỗi 0.01 giây nó cần scroll thêm chừng này offset
+                    // cứ mỗi 0.01 giây nó cần scroll thêm chừng này offset
+                    self.stepScrollOffset = self.pitchGraphScrollView.contentSize.width / CGFloat(self.audioPlayer.duration * 100)
                     self.stepScrollOffset = round(self.stepScrollOffset * scale) / scale
                 }
                 let leftInset = self.pitchGraphScrollView.frame.width / 3
@@ -280,6 +273,10 @@ class DetailPitchesViewController: UIViewController {
         audioPlayer.currentTime = audioPlayer.currentTime + 10
         audioPlayer.prepareToPlay()
         audioPlayer.play()
+    }
+    
+    @IBAction func tapOnBackButton(_ sender: Any) {
+        dismiss(animated: true)
     }
 }
 

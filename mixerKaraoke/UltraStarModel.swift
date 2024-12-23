@@ -13,6 +13,7 @@ struct UltraStarSong: Codable {
     var GAP: Double = 0.0
     var tones: [Tone] = []
     var lines: [UltraStarLine]
+    var fileName: String = ""
 }
 
 struct UltraStarLine: Codable {

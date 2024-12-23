@@ -140,7 +140,7 @@ class UltraStarUtils {
                 let pitchView = UIView()
                 pitchView.translatesAutoresizingMaskIntoConstraints = false
                 pitchView.layer.cornerRadius = 5
-                pitchView.backgroundColor = pitch.word.isEmpty ? .systemBlue : .systemYellow
+                pitchView.backgroundColor = pitch.word.isEmpty ? .clear : .systemYellow
                 
                 container.addSubview(pitchView)
                 
@@ -192,12 +192,18 @@ class UltraStarUtils {
     
     private func getDetailNotes(from song: UltraStarSong) -> [Tone] {
         var result: [Tone] = []
-        let amplitudeOfOscillation = getAmplitudeOfOscillation(from: song)
-        for pitch in amplitudeOfOscillation.min...amplitudeOfOscillation.max {
+        var pitches: [Int] = []
+        song.lines.forEach { line in
+            line.syllables.forEach { syllable in
+                pitches.append(syllable.pitch)
+            }
+        }
+        pitches = Array(Set(pitches))
+        pitches.sort(by: >)
+        pitches.forEach { pitch in
             let tone = getToneName(by: pitch + baseMIDI)
             result.append(tone)
         }
-        result.reverse()
         return result
     }
     
