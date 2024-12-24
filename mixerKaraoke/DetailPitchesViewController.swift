@@ -11,20 +11,6 @@ import AVFoundation
 import AudioKit
 import AudioKitEX
 
-class KalmanFilter {
-    private var estimate: Float = 0.0
-    private var errorEstimate: Float = 1.0
-    private let processNoise: Float = 1e-2
-    private let measurementNoise: Float = 1e-1
-
-    func update(measurement: Float) -> Float {
-        let kalmanGain = errorEstimate / (errorEstimate + measurementNoise)
-        estimate = estimate + kalmanGain * (measurement - estimate)
-        errorEstimate = (1 - kalmanGain) * errorEstimate + abs(estimate) * processNoise
-        return estimate
-    }
-}
-
 class DetailPitchesViewController: UIViewController {
     
     @IBOutlet weak var nameOfSongLabel: UILabel!
@@ -54,10 +40,9 @@ class DetailPitchesViewController: UIViewController {
     private var mic: AudioEngine.InputNode!
     private var fftTap: FFTTap!
     private var audioEngine: AudioEngine!
+    private var nodeRecorder: NodeRecorder!
+    private var recordPlayer: AudioPlayer!
     private var updateCounter = 0
-    private let kalmanFilter = KalmanFilter()
-    private var frequencyBuffer: [Float] = []
-    private let bufferSize = 10  // Số lượng giá trị tần số để làm mịn
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,6 +58,7 @@ class DetailPitchesViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             self?.loadAudio()
             self?.startLyricsSync()
+            self?.startRecording()
         }
         setupAudioEngine()
         blendColorView.layer.compositingFilter = "hueBlendMode"
@@ -81,6 +67,7 @@ class DetailPitchesViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         audioPlayer.pause()
+        self.nodeRecorder.stop()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -140,9 +127,6 @@ class DetailPitchesViewController: UIViewController {
         guard let input = audioEngine.input else { return }
         mic = input
         
-        // Thiết lập Echo Cancellation
-        let echoCancellation = Fader(mic, gain: 0.0) // Giảm âm lượng để tránh tiếng vọng
-        
         // Thêm FFT Tap để lấy dữ liệu FFT
         fftTap = FFTTap(mic) { fftData in
             DispatchQueue.main.async {
@@ -150,9 +134,27 @@ class DetailPitchesViewController: UIViewController {
             }
         }
         
-        // Kích hoạt microphone input
-        audioEngine.output = echoCancellation
+        // Thiết lập Echo Cancellation
+        let echoCancellation = Fader(mic, gain: 0.0) // Giảm âm lượng để tránh tiếng vọng
         
+        // Thiết lập mixer
+        let mixer = Mixer(echoCancellation)
+        
+        // Thiết lập recorder
+        do {
+            nodeRecorder = try NodeRecorder(node: mixer)
+        } catch {
+            Log("Không thể khởi tạo NodeRecorder: \(error)")
+        }
+        
+        // Thiết lập player để phát lại file đã ghi
+        recordPlayer = AudioPlayer()
+        
+        // Kích hoạt microphone input
+        mixer.addInput(recordPlayer)
+        audioEngine.output = mixer
+        
+        // Thiết lập FFT
         fftTap.isNormalized = false
         fftTap.start()
         
@@ -171,16 +173,10 @@ class DetailPitchesViewController: UIViewController {
         } else {
             if let maxIndex = fftData.firstIndex(of: fftData.max() ?? 0) {
                 let frequency = Float(maxIndex) * Float(audioEngine.input!.outputFormat.sampleRate) / Float(fftData.count)
-                let filteredFrequency = kalmanFilter.update(measurement: frequency)
                 if frequency == 0 || frequency > Float(song.tones.first!.frequency) || frequency < Float(song.tones.last!.frequency) { return }
                 let midiNote = Int(round(69 + 12 * log2(frequency / 440.0)))
                 let tone = getToneName(by: midiNote)
                 let matchToneIndex = CGFloat(song.tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
-                
-                let smoothFrequency = smoothFrequency(newFrequency: filteredFrequency)
-                print("=====> frequency: \(frequency)")
-                print("=====> smoothFrequency: \(smoothFrequency)")
-                print("=====> filteredFrequency: \(filteredFrequency)")
                 
                 DispatchQueue.main.async {
                     UIView.animate(withDuration: 1) {
@@ -192,15 +188,6 @@ class DetailPitchesViewController: UIViewController {
         }
     }
     
-    private func smoothFrequency(newFrequency: Float) -> Float {
-        if frequencyBuffer.count >= bufferSize {
-            frequencyBuffer.removeFirst()
-        }
-        frequencyBuffer.append(newFrequency)
-        
-        return frequencyBuffer.reduce(0, +) / Float(frequencyBuffer.count)
-    }
-    
     private func restartEngineIfNeeded() {
         if !audioEngine.avEngine.isRunning {
             do {
@@ -208,6 +195,36 @@ class DetailPitchesViewController: UIViewController {
             } catch {
                 print("Error restarting Audio Engine: \(error)")
             }
+        }
+    }
+    
+    private func startRecording() {
+        do {
+            try nodeRecorder.record()
+        } catch {
+            Log("Không thể bắt đầu ghi âm: \(error)")
+        }
+    }
+    
+    private func stopRecording() {
+        nodeRecorder.stop()
+        if let file = nodeRecorder.audioFile {
+            do {
+                try recordPlayer.load(file: file)
+            } catch {
+                Log("Không thể nghe file ghi âm: \(error)")
+            }
+        }
+    }
+    
+    private func playRecording() {
+        do {
+            if !audioEngine.avEngine.isRunning {
+                try audioEngine.start()
+            }
+            recordPlayer.play()
+        } catch {
+            Log("Không thể phát lại: \(error)")
         }
     }
     
@@ -271,10 +288,12 @@ class DetailPitchesViewController: UIViewController {
         if let audioPlayer = audioPlayer {
             if audioPlayer.isPlaying {
                 self.audioPlayer.pause()
+                self.nodeRecorder.pause()
                 pauseButton.setImage(UIImage(systemName: "play.circle"),
                                      for: .normal)
             } else {
                 self.audioPlayer.play()
+                self.nodeRecorder.resume()
                 pauseButton.setImage(UIImage(systemName: "pause.circle"),
                                      for: .normal)
             }
@@ -292,6 +311,32 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnBackButton(_ sender: Any) {
         dismiss(animated: true)
+    }
+    
+    @IBAction func tapOnRecordButton(_ sender: Any) {
+        if audioPlayer.isPlaying {
+            audioPlayer.pause()
+            nodeRecorder.pause()
+            
+            let alert = UIAlertController(
+                title: "Would you like to stop the recording?",
+                message: "The app is recording your voice and the music. After stopped, hit again on voice button to playback the record",
+                preferredStyle: .alert
+            )
+            
+            alert.addAction(UIAlertAction(title: "Yes, stop it", style: .default, handler: { _ in
+                self.stopRecording()
+            }))
+            alert.addAction(UIAlertAction(title: "Resume", style: .cancel, handler: { _ in
+                self.audioPlayer.prepareToPlay()
+                self.audioPlayer.play()
+                self.nodeRecorder.resume()
+                self.dismiss(animated: true)
+            }))
+            present(alert, animated: true, completion: nil)
+        } else {
+            playRecording()
+        }
     }
 }
 
