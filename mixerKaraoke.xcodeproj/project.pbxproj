@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		483B70062D19717F00585033 /* AudioKitEX in Frameworks */ = {isa = PBXBuildFile; productRef = 483B70052D19717F00585033 /* AudioKitEX */; };
 		4862EC562D11682F00A75F1D /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4862EC552D11682F00A75F1D /* AudioKit */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4862EC562D11682F00A75F1D /* AudioKit in Frameworks */,
+				483B70062D19717F00585033 /* AudioKitEX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 			name = mixerKaraoke;
 			packageProductDependencies = (
 				4862EC552D11682F00A75F1D /* AudioKit */,
+				483B70052D19717F00585033 /* AudioKitEX */,
 			);
 			productName = mixerKaraoke;
 			productReference = 480C64D62CF04399007E7428 /* mixerKaraoke.app */;
@@ -115,6 +118,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */,
+				483B70042D19717F00585033 /* XCRemoteSwiftPackageReference "AudioKitEX" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 480C64D72CF04399007E7428 /* Products */;
@@ -350,6 +354,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		483B70042D19717F00585033 /* XCRemoteSwiftPackageReference "AudioKitEX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKitEX.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.0;
+			};
+		};
 		4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/AudioKit/AudioKit";
@@ -361,6 +373,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		483B70052D19717F00585033 /* AudioKitEX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 483B70042D19717F00585033 /* XCRemoteSwiftPackageReference "AudioKitEX" */;
+			productName = AudioKitEX;
+		};
 		4862EC552D11682F00A75F1D /* AudioKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */;

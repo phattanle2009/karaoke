@@ -9,6 +9,7 @@ import UIKit
 import Foundation
 import AVFoundation
 import AudioKit
+import AudioKitEX
 
 class KalmanFilter {
     private var estimate: Float = 0.0
@@ -52,7 +53,7 @@ class DetailPitchesViewController: UIViewController {
     private var audioPlayer: AVAudioPlayer!
     private var mic: AudioEngine.InputNode!
     private var fftTap: FFTTap!
-    private var engine: AudioEngine!
+    private var audioEngine: AudioEngine!
     private var updateCounter = 0
     private let kalmanFilter = KalmanFilter()
     private var frequencyBuffer: [Float] = []
@@ -67,6 +68,7 @@ class DetailPitchesViewController: UIViewController {
         lyricsTableView.dataSource = self
         
         setupUI()
+        setUpAudioSession()
         drawPitchGraph()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             self?.loadAudio()
@@ -84,7 +86,7 @@ class DetailPitchesViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         fftTap.stop()
-        engine.stop()
+        audioEngine.stop()
     }
     
     private func setupUI() {
@@ -116,17 +118,30 @@ class DetailPitchesViewController: UIViewController {
             audioPlayer.prepareToPlay()
             audioPlayer.play()
             audioPlayer.volume = 1
-            try! AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSession.PortOverride.speaker)
+        }
+    }
+    
+    private func setUpAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setPreferredSampleRate(44100.0)
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
         }
     }
     
     private func setupAudioEngine() {
         // Khởi tạo Audio Engine
-        engine = AudioEngine()
+        audioEngine = AudioEngine()
         
         // Lấy microphone input
-        guard let input = engine.input else { return }
+        guard let input = audioEngine.input else { return }
         mic = input
+        
+        // Thiết lập Echo Cancellation
+        let echoCancellation = Fader(mic, gain: 0.0) // Giảm âm lượng để tránh tiếng vọng
         
         // Thêm FFT Tap để lấy dữ liệu FFT
         fftTap = FFTTap(mic) { fftData in
@@ -136,13 +151,13 @@ class DetailPitchesViewController: UIViewController {
         }
         
         // Kích hoạt microphone input
-        engine.output = Mixer(mic)
+        audioEngine.output = echoCancellation
         
         fftTap.isNormalized = false
         fftTap.start()
         
         do {
-            try engine.start()
+            try audioEngine.start()
         } catch {
             print("Audio Engine Error: \(error.localizedDescription)")
         }
@@ -155,7 +170,7 @@ class DetailPitchesViewController: UIViewController {
             restartEngineIfNeeded()
         } else {
             if let maxIndex = fftData.firstIndex(of: fftData.max() ?? 0) {
-                let frequency = Float(maxIndex) * Float(engine.input!.outputFormat.sampleRate) / Float(fftData.count)
+                let frequency = Float(maxIndex) * Float(audioEngine.input!.outputFormat.sampleRate) / Float(fftData.count)
                 let filteredFrequency = kalmanFilter.update(measurement: frequency)
                 if frequency == 0 || frequency > Float(song.tones.first!.frequency) || frequency < Float(song.tones.last!.frequency) { return }
                 let midiNote = Int(round(69 + 12 * log2(frequency / 440.0)))
@@ -187,9 +202,9 @@ class DetailPitchesViewController: UIViewController {
     }
     
     private func restartEngineIfNeeded() {
-        if !engine.avEngine.isRunning {
+        if !audioEngine.avEngine.isRunning {
             do {
-                try engine.start()
+                try audioEngine.start()
             } catch {
                 print("Error restarting Audio Engine: \(error)")
             }
