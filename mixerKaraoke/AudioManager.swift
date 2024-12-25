@@ -20,7 +20,7 @@ class AudioManager {
     var audioEngine: AudioEngine!
     var recordPlayer: AudioPlayer!
     var nodeRecorder: NodeRecorder!
-    var audioPlayer: AVAudioPlayer!
+    var audioPlayer = AudioPlayer()
     var delegate: AudioManagerDelegate?
     private var updateCounter = 0
     private var mic: AudioEngine.InputNode!
@@ -32,8 +32,7 @@ class AudioManager {
     func loadAudio(with fileName: String) {
         if let path = Bundle.main.path(forResource: fileName, ofType: "mp3") {
             let url = URL(fileURLWithPath: path)
-            audioPlayer = try! AVAudioPlayer(contentsOf: url)
-            audioPlayer.prepareToPlay()
+            try? audioPlayer.load(url: url)
             audioPlayer.play()
             audioPlayer.volume = 1
         }
@@ -41,10 +40,9 @@ class AudioManager {
     
     func setUpAudioSession() {
         do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord,
-                                         mode: .default,
-                                         options: [.defaultToSpeaker, .allowBluetooth])
+            let audioSession = AudioKit.Settings.session
+            try AudioKit.Settings.setSession(category: .playAndRecord,
+                                             with: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setPreferredSampleRate(44100.0)
             try audioSession.setActive(true)
         } catch {
@@ -90,6 +88,7 @@ class AudioManager {
         
         // Kích hoạt microphone input
         mixer.addInput(recordPlayer)
+        mixer.addInput(audioPlayer)
         
         do {
             try audioEngine.start()
@@ -176,10 +175,8 @@ class AudioManager {
         }
     }
     
-    func playbackTime(isNext: Bool = true, seconds: TimeInterval = 10) {
-        audioPlayer.stop()
-        audioPlayer.currentTime = audioPlayer.currentTime - (isNext ? -seconds : seconds)
-        audioPlayer.prepareToPlay()
-        audioPlayer.play()
+    func seek(isNext: Bool = true, seconds: TimeInterval = 10) {
+        let seekTime = max(audioPlayer.currentTime - (isNext ? -seconds : seconds), 0)
+        audioPlayer.seek(time: seekTime)
     }
 }

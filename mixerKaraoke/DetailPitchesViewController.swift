@@ -43,6 +43,7 @@ class DetailPitchesViewController: UIViewController {
         
         setupUI()
         audioManager.tones = song.tones
+        audioManager.setupAudioEngine()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             guard let strongSelf = self else { return }
@@ -50,7 +51,6 @@ class DetailPitchesViewController: UIViewController {
             strongSelf.startLyricsSync()
             strongSelf.audioManager.startRecording()
         }
-        audioManager.setupAudioEngine()
         audioManager.delegate = self
     }
     
@@ -135,29 +135,27 @@ class DetailPitchesViewController: UIViewController {
     @IBAction func tapOnPrevButton(_ sender: Any) {
         xOffset = xOffset - stepScrollOffset * 1000
         xOffset = xOffset <= 0 ? 0 : xOffset
-        audioManager.playbackTime(isNext: false)
+        audioManager.seek(isNext: false)
     }
     
     @IBAction func tapOnPauseButton(_ sender: Any) {
-        if let audioPlayer = audioManager.audioPlayer {
-            if audioPlayer.isPlaying {
-                self.audioManager.audioPlayer.pause()
-                self.audioManager.nodeRecorder.pause()
-                pauseButton.setImage(UIImage(systemName: "play.circle"),
-                                     for: .normal)
-            } else {
-                self.audioManager.audioPlayer.play()
-                self.audioManager.nodeRecorder.resume()
-                pauseButton.setImage(UIImage(systemName: "pause.circle"),
-                                     for: .normal)
-            }
+        if audioManager.audioPlayer.isPlaying {
+            self.audioManager.audioPlayer.pause()
+            self.audioManager.nodeRecorder.pause()
+            pauseButton.setImage(UIImage(systemName: "play.circle"),
+                                 for: .normal)
+        } else {
+            self.audioManager.audioPlayer.play()
+            self.audioManager.nodeRecorder.resume()
+            pauseButton.setImage(UIImage(systemName: "pause.circle"),
+                                 for: .normal)
         }
     }
     
     @IBAction func tapOnNextButton(_ sender: Any) {
         xOffset = xOffset + stepScrollOffset * 1000
         xOffset = xOffset >= pitchGraphScrollView.contentSize.width ? pitchGraphScrollView.contentSize.width : xOffset
-        audioManager.playbackTime()
+        audioManager.seek()
     }
     
     @IBAction func tapOnBackButton(_ sender: Any) {
@@ -179,8 +177,7 @@ class DetailPitchesViewController: UIViewController {
                 self.audioManager.stopRecording()
             }))
             alert.addAction(UIAlertAction(title: "Resume", style: .cancel, handler: { _ in
-                self.audioManager.audioPlayer.prepareToPlay()
-                self.audioManager.audioPlayer.play()
+                self.audioManager.audioPlayer.resume()
                 self.audioManager.nodeRecorder.resume()
                 self.dismiss(animated: true)
             }))
@@ -223,8 +220,7 @@ extension DetailPitchesViewController: UITableViewDelegate, UITableViewDataSourc
         else { return .init() }
         let data = song.lines[indexPath.row]
         let isHighlight = indexPath.row == currentLine
-        guard let player = audioManager.audioPlayer else { return .init() }
-        let currentTime = player.currentTime
+        let currentTime = audioManager.audioPlayer.currentTime
         cell.configCell(data: data.syllables, isHighlight: isHighlight, currentTime: currentTime)
         return cell
     }
