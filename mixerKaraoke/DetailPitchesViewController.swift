@@ -66,7 +66,7 @@ class DetailPitchesViewController: UIViewController {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        audioPlayer.pause()
+        audioPlayer.stop()
         self.nodeRecorder.stop()
     }
     
@@ -134,11 +134,16 @@ class DetailPitchesViewController: UIViewController {
             }
         }
         
+        // Thiết lập FFT
+        fftTap.isNormalized = false
+        fftTap.start()
+        
         // Thiết lập Echo Cancellation
-        let echoCancellation = Fader(mic, gain: 0.0) // Giảm âm lượng để tránh tiếng vọng
+        let echoCancellation = Fader(mic, gain: 1.0) // Giảm âm lượng để tránh tiếng vọng
         
         // Thiết lập mixer
         let mixer = Mixer(echoCancellation)
+        audioEngine.output = mixer
         
         // Thiết lập recorder
         do {
@@ -152,11 +157,6 @@ class DetailPitchesViewController: UIViewController {
         
         // Kích hoạt microphone input
         mixer.addInput(recordPlayer)
-        audioEngine.output = mixer
-        
-        // Thiết lập FFT
-        fftTap.isNormalized = false
-        fftTap.start()
         
         do {
             try audioEngine.start()
@@ -208,23 +208,33 @@ class DetailPitchesViewController: UIViewController {
     
     private func stopRecording() {
         nodeRecorder.stop()
+        audioPlayer.stop()
         if let file = nodeRecorder.audioFile {
-            do {
-                try recordPlayer.load(file: file)
-            } catch {
-                Log("Không thể nghe file ghi âm: \(error)")
-            }
+            print("File ghi âm: \(file.url)")
+            print("Thời lượng file: \(file.duration) giây")
         }
     }
     
     private func playRecording() {
-        do {
-            if !audioEngine.avEngine.isRunning {
+        guard let recordedFile = nodeRecorder?.audioFile else {
+            print("Không có bản ghi để phát lại.")
+            return
+        }
+        ensureAudioEngineRunning()
+        recordPlayer.file = recordedFile
+        recordPlayer.play()
+        recordPlayer.volume = 1
+        print("Đang phát lại bản ghi âm.")
+    }
+    
+    func ensureAudioEngineRunning() {
+        if !audioEngine.avEngine.isRunning {
+            do {
                 try audioEngine.start()
+                print("Audio Engine đã được khởi động lại.")
+            } catch {
+                print("Lỗi khi khởi động lại Audio Engine: \(error)")
             }
-            recordPlayer.play()
-        } catch {
-            Log("Không thể phát lại: \(error)")
         }
     }
     
