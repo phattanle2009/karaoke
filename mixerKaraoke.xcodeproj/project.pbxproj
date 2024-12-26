@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4862EC562D11682F00A75F1D /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4862EC552D11682F00A75F1D /* AudioKit */; };
+		48D0A80D2D14261E00D4B2A0 /* AudioKitEX in Frameworks */ = {isa = PBXBuildFile; productRef = 48D0A80C2D14261E00D4B2A0 /* AudioKitEX */; };
+		48D0A8102D14301500D4B2A0 /* SoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 48D0A80F2D14301500D4B2A0 /* SoundpipeAudioKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +43,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4862EC562D11682F00A75F1D /* AudioKit in Frameworks */,
+				48D0A80D2D14261E00D4B2A0 /* AudioKitEX in Frameworks */,
+				48D0A8102D14301500D4B2A0 /* SoundpipeAudioKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +88,8 @@
 			name = mixerKaraoke;
 			packageProductDependencies = (
 				4862EC552D11682F00A75F1D /* AudioKit */,
+				48D0A80C2D14261E00D4B2A0 /* AudioKitEX */,
+				48D0A80F2D14301500D4B2A0 /* SoundpipeAudioKit */,
 			);
 			productName = mixerKaraoke;
 			productReference = 480C64D62CF04399007E7428 /* mixerKaraoke.app */;
@@ -115,6 +121,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */,
+				48D0A80B2D14261E00D4B2A0 /* XCRemoteSwiftPackageReference "AudioKitEX" */,
+				48D0A80E2D14301500D4B2A0 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 480C64D72CF04399007E7428 /* Products */;
@@ -356,6 +364,22 @@
 				minimumVersion = 5.6.4;
 			};
 		};
+		48D0A80B2D14261E00D4B2A0 /* XCRemoteSwiftPackageReference "AudioKitEX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKitEX.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.0;
+			};
+		};
+		48D0A80E2D14301500D4B2A0 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/SoundpipeAudioKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -363,6 +387,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4862EC542D11682F00A75F1D /* XCRemoteSwiftPackageReference "AudioKit" */;
 			productName = AudioKit;
+		};
+		48D0A80C2D14261E00D4B2A0 /* AudioKitEX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 48D0A80B2D14261E00D4B2A0 /* XCRemoteSwiftPackageReference "AudioKitEX" */;
+			productName = AudioKitEX;
+		};
+		48D0A80F2D14301500D4B2A0 /* SoundpipeAudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 48D0A80E2D14301500D4B2A0 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */;
+			productName = SoundpipeAudioKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

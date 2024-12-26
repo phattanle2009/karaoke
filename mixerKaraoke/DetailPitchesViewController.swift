@@ -9,6 +9,8 @@ import UIKit
 import Foundation
 import AVFoundation
 import AudioKit
+import AudioKitEX
+import SoundpipeAudioKit
 
 class KalmanFilter {
     private var estimate: Float = 0.0
@@ -53,6 +55,7 @@ class DetailPitchesViewController: UIViewController {
     private var mic: AudioEngine.InputNode!
     private var fftTap: FFTTap!
     private var engine: AudioEngine!
+    private var eqFilter: EqualizerFilter!
     private var updateCounter = 0
     private let kalmanFilter = KalmanFilter()
     private var frequencyBuffer: [Float] = []
@@ -143,8 +146,18 @@ class DetailPitchesViewController: UIViewController {
             }
         }
         
+        eqFilter = EqualizerFilter(mic)
+
+        // Cấu hình các dải tần số
+        // Giảm tần số thấp để loại bỏ tiếng ồn từ quạt hoặc xe cộ
+        eqFilter.globalGain = 0.0  // Gain tổng thể
+        eqFilter.av // Giảm nhẹ tần số cao để lọc tiếng xì hoặc nhiễu
+        
+        // Kết nối EqualizerFilter với Audio Engine
+        engine.output = eqFilter
+        
         // Kích hoạt microphone input
-        engine.output = Mixer(mic)
+//        engine.output = Mixer(mic)
         
         fftTap.isNormalized = false
         fftTap.start()
