@@ -6,33 +6,32 @@
 //
 
 import AVFoundation
-import AudioKit
-import AudioKitEX
 
 protocol AudioManagerDelegate {
     func didUpdateFrequency(frequency: Float, tone: Tone, index: CGFloat)
 }
 
-class AudioManager {
+class AudioManager: NSObject {
     
-    var fftTap: FFTTap!
     var tones: [Tone] = []
-    var audioEngine: AudioEngine!
-    var recordPlayer: AudioPlayer!
-    var nodeRecorder: NodeRecorder!
-    var audioPlayer = AudioPlayer()
     var delegate: AudioManagerDelegate?
+    var audioPlayer: AVAudioPlayer!
+    var audioSession: AVAudioSession!
+    var soundRecorder: AVAudioRecorder!
+    var soundPlayer : AVAudioPlayer!
     private var updateCounter = 0
-    private var mic: AudioEngine.InputNode!
     
-    init() {
+    override init() {
+        super.init()
         setUpAudioSession()
+        setupRecorder()
     }
     
     func loadAudio(with fileName: String) {
         if let path = Bundle.main.path(forResource: fileName, ofType: "mp3") {
             let url = URL(fileURLWithPath: path)
-            try? audioPlayer.load(url: url)
+            audioPlayer = try! AVAudioPlayer(contentsOf: url)
+            audioPlayer.prepareToPlay()
             audioPlayer.play()
             audioPlayer.volume = 1
         }
@@ -40,9 +39,10 @@ class AudioManager {
     
     func setUpAudioSession() {
         do {
-            let audioSession = AudioKit.Settings.session
-            try AudioKit.Settings.setSession(category: .playAndRecord,
-                                             with: [.defaultToSpeaker, .allowBluetooth])
+            audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord,
+                                         mode: .default,
+                                         options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setPreferredSampleRate(44100.0)
             try audioSession.setActive(true)
         } catch {
@@ -50,133 +50,80 @@ class AudioManager {
         }
     }
     
-    func setupAudioEngine() {
-        // Khởi tạo Audio Engine
-        audioEngine = AudioEngine()
-        
-        // Lấy microphone input
-        guard let input = audioEngine.input else { return }
-        mic = input
-        
-        // Thêm FFT Tap để lấy dữ liệu FFT
-        fftTap = FFTTap(mic) { fftData in
-            DispatchQueue.main.async {
-                self.analyzeFFTData(fftData)
-            }
-        }
-        
-        // Thiết lập FFT
-        fftTap.isNormalized = false
-        fftTap.start()
-        
-        // Thiết lập Echo Cancellation
-        let echoCancellation = Fader(mic, gain: 1.0) // Giảm âm lượng để tránh tiếng vọng
-        
-        // Thiết lập mixer
-        let mixer = Mixer(echoCancellation)
-        audioEngine.output = mixer
-        
-        // Thiết lập recorder
-        do {
-            nodeRecorder = try NodeRecorder(node: mixer)
-        } catch {
-            Log("Không thể khởi tạo NodeRecorder: \(error)")
-        }
-        
-        // Thiết lập player để phát lại file đã ghi
-        recordPlayer = AudioPlayer()
-        
-        // Kích hoạt microphone input
-        mixer.addInput(recordPlayer)
-        mixer.addInput(audioPlayer)
+    func setupRecorder() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
+        let recordSetting = [ AVFormatIDKey : kAudioFormatAppleLossless,
+                   AVEncoderAudioQualityKey : AVAudioQuality.max.rawValue,
+                        AVEncoderBitRateKey : 320000,
+                      AVNumberOfChannelsKey : 2,
+                            AVSampleRateKey : 44100.2] as [String : Any]
         
         do {
-            try audioEngine.start()
+            soundRecorder = try AVAudioRecorder(url: audioFilename, settings: recordSetting )
+            soundRecorder.prepareToRecord()
         } catch {
-            print("Audio Engine Error: \(error.localizedDescription)")
+            print(error)
         }
     }
     
-    func startRecording() {
+    func setupPlayer() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
         do {
-            try nodeRecorder.record()
+            soundPlayer = try AVAudioPlayer(contentsOf: audioFilename)
+            soundPlayer.prepareToPlay()
+            soundPlayer.volume = 1.0
         } catch {
-            Log("Không thể bắt đầu ghi âm: \(error)")
+            print(error)
         }
     }
     
-    func stopRecording() {
-        nodeRecorder.stop()
-        audioPlayer.stop()
-        if let file = nodeRecorder.audioFile {
-            print("File ghi âm: \(file.url)")
-            print("Thời lượng file: \(file.duration) giây")
+    private func stopRecording() {
+        if soundRecorder != nil {
+            soundRecorder.stop()
+            soundRecorder = nil
+            setupPlayer()
         }
     }
     
     func playRecording() {
-        guard let recordedFile = nodeRecorder?.audioFile else {
-            print("Không có bản ghi để phát lại.")
-            return
-        }
-        ensureAudioEngineRunning()
-        recordPlayer.file = recordedFile
-        recordPlayer.play()
-        recordPlayer.volume = 1
-        print("Đang phát lại bản ghi âm.")
+        soundPlayer.play()
+    }
+    
+    func start() {
+        audioPlayer.play()
+        soundRecorder.record()
     }
     
     func stop() {
-        fftTap.stop()
-        audioEngine.stop()
         audioPlayer.stop()
-        nodeRecorder.stop()
-    }
-    
-    private func restartEngineIfNeeded() {
-        if !audioEngine.avEngine.isRunning {
-            do {
-                try audioEngine.start()
-            } catch {
-                print("Error restarting Audio Engine: \(error)")
-            }
+        stopRecording()
+        if soundPlayer.isPlaying {
+            soundPlayer.stop()
         }
     }
     
-    private func ensureAudioEngineRunning() {
-        if !audioEngine.avEngine.isRunning {
-            do {
-                try audioEngine.start()
-                print("Audio Engine đã được khởi động lại.")
-            } catch {
-                print("Lỗi khi khởi động lại Audio Engine: \(error)")
-            }
-        }
+    func pause() {
+        audioPlayer.pause()
+        soundRecorder.pause()
     }
     
-    private func analyzeFFTData(_ fftData: [Float]) {
-        // Tìm giá trị lớn nhất trong FFT data (tần số trội)
-        updateCounter += 1
-        if updateCounter % 10 == 0 {
-            restartEngineIfNeeded()
-        } else {
-            if let maxIndex = fftData.firstIndex(of: fftData.max() ?? 0) {
-                let sampleRate = Float(audioEngine.input!.outputFormat.sampleRate)
-                let frequency = Float(maxIndex) * sampleRate / Float(fftData.count)
-                if frequency == 0 || frequency > Float(tones.first!.frequency) ||
-                    frequency < Float(tones.last!.frequency) {
-                    return
-                }
-                let midiNote = Int(round(69 + 12 * log2(frequency / 440.0)))
-                let tone = getToneName(by: midiNote)
-                let matchToneIndex = CGFloat(tones.firstIndex(where: {$0.midi == tone.midi}) ?? 0)
-                delegate?.didUpdateFrequency(frequency: frequency, tone: tone, index: matchToneIndex)
-            }
-        }
+    func resume() {
+        audioPlayer.prepareToPlay()
+        audioPlayer.play()
+        soundRecorder.prepareToRecord()
+        soundRecorder.record()
     }
     
     func seek(isNext: Bool = true, seconds: TimeInterval = 10) {
+        audioPlayer.pause()
         let seekTime = max(audioPlayer.currentTime - (isNext ? -seconds : seconds), 0)
-        audioPlayer.seek(time: seekTime)
+        audioPlayer.currentTime = seekTime
+        audioPlayer.prepareToPlay()
+        audioPlayer.play()
+    }
+    
+    private func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
     }
 }

@@ -36,22 +36,22 @@ class DetailPitchesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupUI()
+        audioManager.tones = song.tones
+        audioManager.loadAudio(with: song.fileName)
+        startLyricsSync()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.audioManager.start()
+        }
+        
+        audioManager.delegate = self
+        
         lyricsTableView.register(UINib(nibName: "LyricsTableViewCell", bundle: .main),
                                  forCellReuseIdentifier: "LyricsTableViewCell")
         lyricsTableView.delegate = self
         lyricsTableView.dataSource = self
-        
-        setupUI()
-        audioManager.tones = song.tones
-        audioManager.setupAudioEngine()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            guard let strongSelf = self else { return }
-            strongSelf.audioManager.loadAudio(with: strongSelf.song.fileName)
-            strongSelf.startLyricsSync()
-            strongSelf.audioManager.startRecording()
-        }
-        audioManager.delegate = self
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -73,7 +73,7 @@ class DetailPitchesViewController: UIViewController {
         pitchGraphScrollView.contentInset = UIEdgeInsets(top: 0.0, left: left, bottom: 0.0, right: 0.0)
         
         // pitch level
-        pitchDetectorLabel.text = "Current Pitch: -- Hz"
+        pitchDetectorLabel.text = "Recording..."
         pitchDetectorLabel.textAlignment = .center
         pitchDetectorLabel.font = UIFont.systemFont(ofSize: 24)
         
@@ -140,13 +140,11 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnPauseButton(_ sender: Any) {
         if audioManager.audioPlayer.isPlaying {
-            self.audioManager.audioPlayer.pause()
-            self.audioManager.nodeRecorder.pause()
+            audioManager.pause()
             pauseButton.setImage(UIImage(systemName: "play.circle"),
                                  for: .normal)
         } else {
-            self.audioManager.audioPlayer.play()
-            self.audioManager.nodeRecorder.resume()
+            audioManager.resume()
             pauseButton.setImage(UIImage(systemName: "pause.circle"),
                                  for: .normal)
         }
@@ -164,8 +162,7 @@ class DetailPitchesViewController: UIViewController {
     
     @IBAction func tapOnRecordButton(_ sender: Any) {
         if audioManager.audioPlayer.isPlaying {
-            audioManager.audioPlayer.pause()
-            audioManager.nodeRecorder.pause()
+            audioManager.pause()
             
             let alert = UIAlertController(
                 title: "Would you like to stop the recording?",
@@ -174,15 +171,15 @@ class DetailPitchesViewController: UIViewController {
             )
             
             alert.addAction(UIAlertAction(title: "Yes, stop it", style: .default, handler: { _ in
-                self.audioManager.stopRecording()
+                self.audioManager.stop()
             }))
             alert.addAction(UIAlertAction(title: "Resume", style: .cancel, handler: { _ in
-                self.audioManager.audioPlayer.resume()
-                self.audioManager.nodeRecorder.resume()
+                self.audioManager.resume()
                 self.dismiss(animated: true)
             }))
             present(alert, animated: true, completion: nil)
         } else {
+            pitchDetectorLabel.text = "Playing record..."
             audioManager.playRecording()
         }
     }
