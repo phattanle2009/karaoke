@@ -26,10 +26,23 @@ class DetailLyricsViewController: UIViewController {
         
         tableView.dataSource = self
         tableView.delegate = self
-        
+        setUpAudioSession()
         loadLyrics()
         playSong()
         syncLyrics()
+    }
+    
+    func setUpAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord,
+                                         mode: .default,
+                                         options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setPreferredSampleRate(44100.0)
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
+        }
     }
     
     func parseLRC(from lrcString: String) -> [LyricLine] {
