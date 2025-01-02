@@ -46,7 +46,7 @@ class AudioManager: NSObject {
             audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playAndRecord,
                                          mode: .default,
-                                         options: [.defaultToSpeaker, .allowBluetooth])
+                                         options: [.defaultToSpeaker, .allowBluetoothA2DP])
             try audioSession.setPreferredSampleRate(44100.0)
             try audioSession.setActive(true)
         } catch {
@@ -85,7 +85,6 @@ class AudioManager: NSObject {
         if soundRecorder != nil {
             soundRecorder.stop()
             soundRecorder = nil
-            mergeAudioFiles()
         }
     }
     
@@ -128,12 +127,12 @@ class AudioManager: NSObject {
         return paths[0]
     }
     
-    private func mergeAudioFiles() {
+    func mergeAudioFilesWith(voiceVolume: Int, musicVolume: Int) {
         let musicFilePath = Bundle.main.path(forResource: fileName, ofType: "mp3")!
         let userVoiceFilePath = getDocumentsDirectory().appendingPathComponent(recordFile).path
         let outputFilePath = getDocumentsDirectory().appendingPathComponent("karaokeResult.mp3").path
         
-        let ffmpegCommand = "-y -i \(musicFilePath) -i \(userVoiceFilePath) -filter_complex [0:a][1:a]amix=inputs=2:duration=shortest \(outputFilePath)"
+        let ffmpegCommand = "-y -i \(musicFilePath) -i \(userVoiceFilePath) -filter_complex [0:a]volume=\(musicVolume/10)[a1];[1:a]volume=\(voiceVolume/10)[a2];[a1][a2]amix=inputs=2:duration=shortest \(outputFilePath)"
         FFmpegKit.executeAsync(ffmpegCommand) { [weak self] session in
             let returnCode = session?.getReturnCode()
             if let strongSelf = self, let returnCode = returnCode, returnCode.isValueSuccess() {

@@ -172,6 +172,12 @@ class DetailPitchesViewController: UIViewController {
             
             alert.addAction(UIAlertAction(title: "Yes, stop it", style: .default, handler: { _ in
                 self.audioManager.stop()
+                let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main)
+                    .instantiateViewController(withIdentifier: "MixerViewController") as? MixerViewController
+                vc?.modalPresentationStyle = .overFullScreen
+                vc?.delegate = self
+                self.present(vc!, animated: true)
+                self.pitchDetectorLabel.text = "Processing final audio..."
             }))
             alert.addAction(UIAlertAction(title: "Resume", style: .cancel, handler: { _ in
                 self.audioManager.resume()
@@ -195,6 +201,16 @@ extension DetailPitchesViewController: AudioManagerDelegate {
                 self.pitchArrow.transform = CGAffineTransform(translationX: 0, y: index * 20.0)
             }
         }
+    }
+}
+
+// MARK: - MixerDelegate
+
+extension DetailPitchesViewController: MixerDelegate {
+    
+    func didChangeVolumeValue(vocal: Int, music: Int) {
+        audioManager.mergeAudioFilesWith(voiceVolume: vocal, musicVolume: music)
+        pitchDetectorLabel.text = "Export completely"
     }
 }
 
