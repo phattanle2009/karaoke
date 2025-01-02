@@ -1,0 +1,16 @@
+PODS:
+  - ffmpeg-kit-ios-full (6.0)
+
+DEPENDENCIES:
+  - ffmpeg-kit-ios-full (~> 6.0)
+
+SPEC REPOS:
+  trunk:
+    - ffmpeg-kit-ios-full
+
+SPEC CHECKSUMS:
+  ffmpeg-kit-ios-full: 0099a769d22114dde52cdc238397941c32f75d27
+
+PODFILE CHECKSUM: 2ebaafb771fbee87a0b8af7e7295721a355c9400
+
+COCOAPODS: 1.16.2

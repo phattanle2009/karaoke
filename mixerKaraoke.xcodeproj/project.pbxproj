@@ -6,8 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		610B50FC6C3D8197C85382AA /* Pods_mixerKaraoke.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31788487ACC1A8314836CFD6 /* Pods_mixerKaraoke.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		31788487ACC1A8314836CFD6 /* Pods_mixerKaraoke.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_mixerKaraoke.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		42535BE3925EC370B877A9E2 /* Pods-mixerKaraoke.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mixerKaraoke.release.xcconfig"; path = "Target Support Files/Pods-mixerKaraoke/Pods-mixerKaraoke.release.xcconfig"; sourceTree = "<group>"; };
 		480C64D62CF04399007E7428 /* mixerKaraoke.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mixerKaraoke.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7AF3729C743F9EDAD0A7470F /* Pods-mixerKaraoke.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mixerKaraoke.debug.xcconfig"; path = "Target Support Files/Pods-mixerKaraoke/Pods-mixerKaraoke.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				610B50FC6C3D8197C85382AA /* Pods_mixerKaraoke.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +55,8 @@
 			children = (
 				480C64D82CF04399007E7428 /* mixerKaraoke */,
 				480C64D72CF04399007E7428 /* Products */,
+				A035F106B0906D6B1E647D83 /* Pods */,
+				9EC9A4CADC1538F1A3F67232 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,6 +68,23 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		9EC9A4CADC1538F1A3F67232 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				31788487ACC1A8314836CFD6 /* Pods_mixerKaraoke.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A035F106B0906D6B1E647D83 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				7AF3729C743F9EDAD0A7470F /* Pods-mixerKaraoke.debug.xcconfig */,
+				42535BE3925EC370B877A9E2 /* Pods-mixerKaraoke.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -65,9 +92,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 480C64E92CF0439A007E7428 /* Build configuration list for PBXNativeTarget "mixerKaraoke" */;
 			buildPhases = (
+				74A78FEEA4033F0D3478B069 /* [CP] Check Pods Manifest.lock */,
 				480C64D22CF04399007E7428 /* Sources */,
 				480C64D32CF04399007E7428 /* Frameworks */,
 				480C64D42CF04399007E7428 /* Resources */,
+				9B92F4FCE8032D1B9314C729 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -77,8 +106,6 @@
 				480C64D82CF04399007E7428 /* mixerKaraoke */,
 			);
 			name = mixerKaraoke;
-			packageProductDependencies = (
-			);
 			productName = mixerKaraoke;
 			productReference = 480C64D62CF04399007E7428 /* mixerKaraoke.app */;
 			productType = "com.apple.product-type.application";
@@ -107,8 +134,6 @@
 			);
 			mainGroup = 480C64CD2CF04399007E7428;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 480C64D72CF04399007E7428 /* Products */;
 			projectDirPath = "";
@@ -129,6 +154,48 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		74A78FEEA4033F0D3478B069 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-mixerKaraoke-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		9B92F4FCE8032D1B9314C729 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-mixerKaraoke/Pods-mixerKaraoke-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-mixerKaraoke/Pods-mixerKaraoke-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-mixerKaraoke/Pods-mixerKaraoke-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		480C64D22CF04399007E7428 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -142,12 +209,14 @@
 /* Begin XCBuildConfiguration section */
 		480C64EA2CF0439A007E7428 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AF3729C743F9EDAD0A7470F /* Pods-mixerKaraoke.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 829KLR4XZ8;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mixerKaraoke/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = cc;
@@ -172,12 +241,14 @@
 		};
 		480C64EB2CF0439A007E7428 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 42535BE3925EC370B877A9E2 /* Pods-mixerKaraoke.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 829KLR4XZ8;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = mixerKaraoke/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = cc;

@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import ffmpegkit
 
 protocol AudioManagerDelegate {
     func didUpdateFrequency(frequency: Float, tone: Tone, index: CGFloat)
@@ -20,6 +21,8 @@ class AudioManager: NSObject {
     var soundRecorder: AVAudioRecorder!
     var soundPlayer : AVAudioPlayer!
     private var updateCounter = 0
+    private var fileName: String = ""
+    private var recordFile = "recording.m4a"
     
     override init() {
         super.init()
@@ -34,10 +37,11 @@ class AudioManager: NSObject {
             audioPlayer.prepareToPlay()
             audioPlayer.play()
             audioPlayer.volume = 1
+            self.fileName = fileName
         }
     }
     
-    func setUpAudioSession() {
+    private func setUpAudioSession() {
         do {
             audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playAndRecord,
@@ -50,8 +54,8 @@ class AudioManager: NSObject {
         }
     }
     
-    func setupRecorder() {
-        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
+    private func setupRecorder() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent(recordFile)
         let recordSetting = [ AVFormatIDKey : kAudioFormatAppleLossless,
                    AVEncoderAudioQualityKey : AVAudioQuality.max.rawValue,
                         AVEncoderBitRateKey : 320000,
@@ -59,15 +63,15 @@ class AudioManager: NSObject {
                             AVSampleRateKey : 44100.2] as [String : Any]
         
         do {
-            soundRecorder = try AVAudioRecorder(url: audioFilename, settings: recordSetting )
+            soundRecorder = try AVAudioRecorder(url: audioFilename, settings: recordSetting)
             soundRecorder.prepareToRecord()
         } catch {
             print(error)
         }
     }
     
-    func setupPlayer() {
-        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
+    private func setupRecordPlayer() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("karaokeResult.mp3")
         do {
             soundPlayer = try AVAudioPlayer(contentsOf: audioFilename)
             soundPlayer.prepareToPlay()
@@ -81,7 +85,7 @@ class AudioManager: NSObject {
         if soundRecorder != nil {
             soundRecorder.stop()
             soundRecorder = nil
-            setupPlayer()
+            mergeAudioFiles()
         }
     }
     
@@ -97,9 +101,6 @@ class AudioManager: NSObject {
     func stop() {
         audioPlayer.stop()
         stopRecording()
-        if soundPlayer.isPlaying {
-            soundPlayer.stop()
-        }
     }
     
     func pause() {
@@ -125,5 +126,22 @@ class AudioManager: NSObject {
     private func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
+    }
+    
+    private func mergeAudioFiles() {
+        let musicFilePath = Bundle.main.path(forResource: fileName, ofType: "mp3")!
+        let userVoiceFilePath = getDocumentsDirectory().appendingPathComponent(recordFile).path
+        let outputFilePath = getDocumentsDirectory().appendingPathComponent("karaokeResult.mp3").path
+        
+        let ffmpegCommand = "-y -i \(musicFilePath) -i \(userVoiceFilePath) -filter_complex [0:a][1:a]amix=inputs=2:duration=shortest \(outputFilePath)"
+        FFmpegKit.executeAsync(ffmpegCommand) { [weak self] session in
+            let returnCode = session?.getReturnCode()
+            if let strongSelf = self, let returnCode = returnCode, returnCode.isValueSuccess() {
+                strongSelf.setupRecordPlayer()
+                print("Audio files merged successfully!")
+            } else {
+                print("Error merging audio files.")
+            }
+        }
     }
 }
