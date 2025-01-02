@@ -1,0 +1,13 @@
+build/
+Pods/
+cer/
+xcuserdata/
+xcodebuild.log
+.bundle
+#Gemfile.lock
+vendor/
+docs/
+.DS_Store
+*.ipa
+*.dSYM.zip
+*.dSYM
