@@ -498,6 +498,7 @@
                                 </constraints>
                             </view>
                         </subviews>
+                        <viewLayoutGuide key="safeArea" id="9bX-vm-eaJ"/>
                         <constraints>
                             <constraint firstAttribute="bottom" secondItem="RfP-qa-wIJ" secondAttribute="bottom" id="KRd-1O-Pj4"/>
                             <constraint firstItem="RfP-qa-wIJ" firstAttribute="top" secondItem="V6S-So-41U" secondAttribute="top" id="QLm-fb-MEb"/>
@@ -507,7 +508,9 @@
                     </view>
                     <connections>
                         <outlet property="musicValueLabel" destination="RaG-A6-yno" id="kev-3b-Kat"/>
+                        <outlet property="musicVolumeSlider" destination="w7p-Dr-KlO" id="5r2-cO-Xcx"/>
                         <outlet property="voiceValueLabel" destination="Ydd-ei-SoC" id="Exd-AK-gRa"/>
+                        <outlet property="voiceVolumeSlider" destination="mR3-cx-OqV" id="tie-oa-Jww"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="L4t-2J-6YT" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

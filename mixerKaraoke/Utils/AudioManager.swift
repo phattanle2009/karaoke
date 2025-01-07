@@ -127,12 +127,12 @@ class AudioManager: NSObject {
         return paths[0]
     }
     
-    func mergeAudioFilesWith(voiceVolume: Int, musicVolume: Int) {
+    func mergeAudioFilesWith(voiceVolume: Float, musicVolume: Float) {
         let musicFilePath = Bundle.main.path(forResource: fileName, ofType: "mp3")!
         let userVoiceFilePath = getDocumentsDirectory().appendingPathComponent(recordFile).path
         let outputFilePath = getDocumentsDirectory().appendingPathComponent("karaokeResult.mp3").path
         
-        let ffmpegCommand = "-y -i \(musicFilePath) -i \(userVoiceFilePath) -filter_complex [0:a]volume=\(musicVolume/10)[a1];[1:a]volume=\(voiceVolume/10)[a2];[a1][a2]amix=inputs=2:duration=shortest \(outputFilePath)"
+        let ffmpegCommand = "-y -i \(musicFilePath) -i \(userVoiceFilePath) -filter_complex [0:a]volume=\(musicVolume)[a1];[1:a]volume=\(voiceVolume)[a2];[a1][a2]amix=inputs=2:duration=shortest \(outputFilePath)"
         FFmpegKit.executeAsync(ffmpegCommand) { [weak self] session in
             let returnCode = session?.getReturnCode()
             if let strongSelf = self, let returnCode = returnCode, returnCode.isValueSuccess() {

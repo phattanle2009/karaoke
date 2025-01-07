@@ -208,7 +208,7 @@ extension DetailPitchesViewController: AudioManagerDelegate {
 
 extension DetailPitchesViewController: MixerDelegate {
     
-    func didChangeVolumeValue(vocal: Int, music: Int) {
+    func didChangeVolumeValue(vocal: Float, music: Float) {
         audioManager.mergeAudioFilesWith(voiceVolume: vocal, musicVolume: music)
         pitchDetectorLabel.text = "Export completely"
     }
